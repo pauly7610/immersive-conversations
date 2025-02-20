@@ -110,4 +110,25 @@ export const RibbonButton = styled.button`
   }
 `;
 
+export const RatingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+`;
+
+export const StarButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: ${({ active }) => (active ? '#FFD700' : '#ccc')};
+  transition: color 0.2s;
+
+  &:hover {
+    color: #FFD700;
+  }
+`;
+
 // Add other styled components from the original file...
+
+const theme = useTheme(); // If you plan to use this elsewhere in the component

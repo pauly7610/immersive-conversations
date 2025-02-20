@@ -67,8 +67,13 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
     };
 
     const handleSend = () => {
+        if (!input.trim()) {
+            setError("Input cannot be empty.");
+            return;
+        }
         sendMessage(input);
         setInput('');
+        setError(null);
     };
 
     const handleKeyDown = (event) => {

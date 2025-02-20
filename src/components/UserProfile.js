@@ -5,6 +5,7 @@ const UserProfile = () => {
         name: 'John Doe',
         email: 'john.doe@example.com',
         languagePreference: 'English',
+        avatar: 'default-avatar.png'
     });
 
     const handleInputChange = (e) => {
@@ -12,9 +13,17 @@ const UserProfile = () => {
         setUserInfo({ ...userInfo, [name]: value });
     };
 
+    const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setUserInfo({ ...userInfo, avatar: URL.createObjectURL(file) });
+        }
+    };
+
     return (
         <div>
             <h2>User Profile</h2>
+            <img src={userInfo.avatar} alt="User Avatar" width="100" />
             <form>
                 <label>
                     Name:
@@ -31,6 +40,10 @@ const UserProfile = () => {
                         <option value="Spanish">Spanish</option>
                         <option value="French">French</option>
                     </select>
+                </label>
+                <label>
+                    Avatar:
+                    <input type="file" onChange={handleAvatarChange} />
                 </label>
             </form>
         </div>

@@ -9,6 +9,11 @@ import {
 
 const Review = ({ transcript }) => {
     const [rating, setRating] = useState(5);
+    const [comments, setComments] = useState('');
+
+    const handleCommentChange = (e) => {
+        setComments(e.target.value);
+    };
 
     return (
         <Container>
@@ -32,6 +37,14 @@ const Review = ({ transcript }) => {
                     </StarButton>
                 ))}
             </RatingContainer>
+            <h3>Comments and Suggestions:</h3>
+            <textarea 
+                value={comments} 
+                onChange={handleCommentChange} 
+                placeholder="Leave your comments here..."
+                rows="4"
+                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+            />
             <p>Thank you for your feedback!</p>
         </Container>
     );
