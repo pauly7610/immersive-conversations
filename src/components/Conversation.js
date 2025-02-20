@@ -32,44 +32,38 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
         return initialMessages[id] || initialMessages.default;
     };
 
-    const handleSpeechRecognition = () => {
-        try {
-            setIsRecording(true);
-            // Simulate speech recognition
-            setTimeout(() => {
-                setIsRecording(false);
-                const mockResponse = "I heard your speech input.";
-                sendMessage(mockResponse, 'User');
-            }, 2000);
-        } catch (err) {
-            setError("Speech recognition failed");
-            setIsRecording(false);
-        }
+    const generateMockAIResponse = (userMessage) => {
+        // Mock AI response logic with cultural context
+        const responses = [
+            "That's interesting, can you tell me more?",
+            "I see, what else would you like to discuss?",
+            "Great point! Let's explore that further."
+        ];
+        const culturalContext = "Remember to use formal language in professional settings.";
+        return `${responses[Math.floor(Math.random() * responses.length)]} ${culturalContext}`;
+    };
+
+    const mockPronunciationFeedback = (userMessage) => {
+        // Mock pronunciation feedback
+        const feedback = "Your pronunciation is clear, but try to emphasize the 'r' sound.";
+        return feedback;
     };
 
     const sendMessage = (text, speaker = 'User') => {
         if (text.trim()) {
             const newTranscript = [...transcript, { speaker, text }];
             setTranscript(newTranscript);
-            
-            // Simulate AI response
+
             if (speaker === 'User') {
-                setTimeout(() => {
-                    const aiResponse = generateAIResponse(text);
-                    setTranscript(prev => [...prev, { speaker: 'AI', text: aiResponse }]);
-                }, 1000);
+                const aiResponse = generateMockAIResponse(text);
+                const pronunciationFeedback = mockPronunciationFeedback(text);
+                setTranscript(prev => [
+                    ...prev, 
+                    { speaker: 'AI', text: aiResponse },
+                    { speaker: 'System', text: pronunciationFeedback }
+                ]);
             }
         }
-    };
-
-    const generateAIResponse = (userMessage) => {
-        // Basic response generation logic
-        const responses = [
-            "Interesting, tell me more.",
-            "I understand. Could you elaborate?",
-            "That's a great point!",
-        ];
-        return responses[Math.floor(Math.random() * responses.length)];
     };
 
     const handleSend = () => {
@@ -93,7 +87,7 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
             {error && <div style={{ color: 'red' }}>{error}</div>}
             <TranscriptContainer>
                 {transcript.map((message, index) => (
-                    <MessageBubble key={index} speaker={message.speaker}>
+                    <MessageBubble key={index} speaker={message.speaker} className="fade-in">
                         {message.text}
                     </MessageBubble>
                 ))}
@@ -117,7 +111,7 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
             </InputContainer>
             <div>
                 <RecordButton 
-                    onClick={handleSpeechRecognition} 
+                    onClick={() => setIsRecording(!isRecording)} 
                     disabled={isRecording}
                     aria-label="Start speech recognition"
                 >

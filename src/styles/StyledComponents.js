@@ -1,9 +1,88 @@
 import styled, { keyframes } from 'styled-components';
+import { useTheme } from '../context/ThemeContext';
 
 export const pulseAnimation = keyframes`
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
+`;
+
+export const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+export const Container = styled.div`
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: ${({ theme }) => (theme === 'light' ? '#f0f8ff' : '#333')};
+  color: ${({ theme }) => (theme === 'light' ? '#000' : '#fff')};
+  font-family: 'Arial', sans-serif;
+  @media (max-width: 600px) {
+      padding: 10px;
+  }
+`;
+
+export const TranscriptContainer = styled.div`
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+`;
+
+export const MessageBubble = styled.div`
+  background-color: ${({ speaker }) => (speaker === 'AI' ? '#e0f7fa' : '#58cc02')};
+  color: ${({ speaker }) => (speaker === 'AI' ? '#000' : '#fff')};
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+  animation: ${fadeIn} 0.5s ease-in-out;
+  font-size: 16px;
+`;
+
+export const InputContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+export const InputBox = styled.input`
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-right: 10px;
+`;
+
+export const SendButton = styled.button`
+  padding: 10px 20px;
+  background-color: #58cc02;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  &:disabled {
+    background-color: #ccc;
+  }
+`;
+
+export const RecordButton = styled.button`
+  padding: 10px 20px;
+  background-color: #ff5722;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+`;
+
+export const EndButton = styled.button`
+  padding: 10px 20px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 `;
 
 export const CategoryRibbon = styled.div`

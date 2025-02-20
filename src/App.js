@@ -4,7 +4,12 @@ import ScenarioSelection from './components/ScenarioSelection';
 import WarmUp from './components/WarmUp';
 import Conversation from './components/Conversation';
 import Review from './components/Review';
+import UserProfile from './components/UserProfile';
+import ProgressChart from './components/ProgressChart';
+import Leaderboard from './components/Leaderboard';
+import NavigationBar from './components/NavigationBar';
 import { Container } from './styles/StyledComponents';
+import { ThemeProvider } from './context/ThemeContext';
 
 const App = () => {
     const [currentScreen, setCurrentScreen] = useState('selection');
@@ -26,50 +31,43 @@ const App = () => {
     };
 
     return (
-        <Router>
-            <Container>
-                <Routes>
-                    <Route 
-                        path="/" 
-                        element={
-                            currentScreen === 'selection' && (
-                                <ScenarioSelection onScenarioSelect={handleScenarioSelect} />
-                            )
-                        } 
-                    />
-                    <Route 
-                        path="/warmup" 
-                        element={
-                            currentScreen === 'warmup' && (
-                                <WarmUp 
-                                    scenarioId={selectedScenarioId} 
-                                    onWarmUpComplete={handleWarmUpComplete} 
-                                />
-                            )
-                        } 
-                    />
-                    <Route 
-                        path="/conversation" 
-                        element={
-                            currentScreen === 'conversation' && (
-                                <Conversation 
-                                    scenarioId={selectedScenarioId} 
-                                    onConversationEnd={handleConversationEnd} 
-                                />
-                            )
-                        } 
-                    />
-                    <Route 
-                        path="/review" 
-                        element={
-                            currentScreen === 'review' && (
-                                <Review transcript={conversationTranscript} />
-                            )
-                        } 
-                    />
-                </Routes>
-            </Container>
-        </Router>
+        <ThemeProvider>
+            <Router>
+                <NavigationBar />
+                <Container>
+                    <Routes>
+                        <Route 
+                            path="/" 
+                            element={<ScenarioSelection onScenarioSelect={handleScenarioSelect} />} 
+                        />
+                        <Route 
+                            path="/warmup" 
+                            element={<WarmUp scenarioId={selectedScenarioId} onWarmUpComplete={handleWarmUpComplete} />} 
+                        />
+                        <Route 
+                            path="/conversation" 
+                            element={<Conversation scenarioId={selectedScenarioId} onConversationEnd={handleConversationEnd} />} 
+                        />
+                        <Route 
+                            path="/review" 
+                            element={<Review transcript={conversationTranscript} />} 
+                        />
+                        <Route 
+                            path="/profile" 
+                            element={<UserProfile />} 
+                        />
+                        <Route 
+                            path="/progress" 
+                            element={<ProgressChart />} 
+                        />
+                        <Route 
+                            path="/leaderboard" 
+                            element={<Leaderboard />} 
+                        />
+                    </Routes>
+                </Container>
+            </Router>
+        </ThemeProvider>
     );
 };
 
