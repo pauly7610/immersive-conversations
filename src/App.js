@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import ScenarioSelection from './components/ScenarioSelection';
 import WarmUp from './components/WarmUp';
@@ -10,6 +10,8 @@ import Leaderboard from './components/Leaderboard';
 import NavigationBar from './components/NavigationBar';
 import { Container } from './styles/StyledComponents';
 import { ThemeProvider } from './context/ThemeContext';
+
+const ConversationComponent = lazy(() => import('./components/Conversation'));
 
 const App = () => {
     const [currentScreen, setCurrentScreen] = useState('selection');
@@ -46,7 +48,11 @@ const App = () => {
                         />
                         <Route 
                             path="/conversation" 
-                            element={<Conversation scenarioId={selectedScenarioId} onConversationEnd={handleConversationEnd} />} 
+                            element={
+                                <Suspense fallback={<div>Loading...</div>}>
+                                    <ConversationComponent scenarioId={selectedScenarioId} onConversationEnd={handleConversationEnd} />
+                                </Suspense>
+                            } 
                         />
                         <Route 
                             path="/review" 

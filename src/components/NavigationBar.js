@@ -31,10 +31,10 @@ const StyledLink = styled(NavLink)`
 
 const NavigationBar = () => {
   return (
-    <Nav>
+    <Nav role="navigation" aria-label="Main Navigation">
       <NavList>
         <NavItem>
-          <StyledLink to="/" exact activeClassName="active">
+          <StyledLink to="/" exact activeClassName="active" tabIndex="0">
             Home
           </StyledLink>
         </NavItem>

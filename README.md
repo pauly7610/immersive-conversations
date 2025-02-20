@@ -160,3 +160,13 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 - Built using modern language learning methodologies
 - Implements CEFR language proficiency standards
 - Voice recognition powered by Web Speech API
+
+## Components
+
+### Conversation
+
+Handles real-time conversation with AI, providing pronunciation and grammar feedback.
+
+### Badge
+
+Displays user achievements with a title and description.

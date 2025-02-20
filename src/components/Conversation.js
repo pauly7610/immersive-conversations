@@ -79,9 +79,13 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
             setError("Input cannot be empty.");
             return;
         }
-        sendMessage(input);
-        setInput('');
-        setError(null);
+        try {
+            sendMessage(input);
+            setInput('');
+            setError(null);
+        } catch (error) {
+            setError("An error occurred while sending the message.");
+        }
     };
 
     const handleKeyDown = (event) => {
