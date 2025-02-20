@@ -1,3 +1,4 @@
+/* global webkitSpeechRecognition */
 import React, { useState, useEffect } from 'react';
 import { 
     Container, 
@@ -13,7 +14,6 @@ import {
 const Conversation = ({ scenarioId, onConversationEnd }) => {
     const [transcript, setTranscript] = useState([]);
     const [input, setInput] = useState('');
-    const [isRecording, setIsRecording] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -49,6 +49,12 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
         return feedback;
     };
 
+    const mockGrammarFeedback = (userMessage) => {
+        // Mock grammar feedback
+        const feedback = "Consider using 'have' instead of 'has' in this context.";
+        return feedback;
+    };
+
     const sendMessage = (text, speaker = 'User') => {
         if (text.trim()) {
             const newTranscript = [...transcript, { speaker, text }];
@@ -57,10 +63,12 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
             if (speaker === 'User') {
                 const aiResponse = generateMockAIResponse(text);
                 const pronunciationFeedback = mockPronunciationFeedback(text);
+                const grammarFeedback = mockGrammarFeedback(text);
                 setTranscript(prev => [
                     ...prev, 
                     { speaker: 'AI', text: aiResponse },
-                    { speaker: 'System', text: pronunciationFeedback }
+                    { speaker: 'System', text: pronunciationFeedback },
+                    { speaker: 'System', text: grammarFeedback }
                 ]);
             }
         }
@@ -84,6 +92,20 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
 
     const handleEndConversation = () => {
         onConversationEnd(transcript);
+    };
+
+    const handleVoiceInput = () => {
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                sendMessage(transcript);
+            };
+            recognition.start();
+        } else {
+            alert('Speech recognition not supported in this browser.');
+        }
     };
 
     return (
@@ -116,11 +138,10 @@ const Conversation = ({ scenarioId, onConversationEnd }) => {
             </InputContainer>
             <div>
                 <RecordButton 
-                    onClick={() => setIsRecording(!isRecording)} 
-                    disabled={isRecording}
+                    onClick={handleVoiceInput} 
                     aria-label="Start speech recognition"
                 >
-                    {isRecording ? 'Recording...' : 'Speak'}
+                    Speak
                 </RecordButton>
                 <EndButton 
                     onClick={handleEndConversation}

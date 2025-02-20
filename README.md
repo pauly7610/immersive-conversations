@@ -5,6 +5,7 @@ A React-based implementation of an intelligent language learning interface that 
 ## Overview
 
 This project implements the user interface components for an AI-powered language learning system, which aims to:
+
 - Provide real-time conversation practice in multiple languages
 - Deliver immediate pronunciation and grammar feedback
 - Adapt difficulty based on user proficiency
@@ -13,6 +14,7 @@ This project implements the user interface components for an AI-powered language
 ## Features
 
 - **Scenario-Based Learning**
+
   - Curated real-world conversation scenarios
   - Progressive difficulty levels (A1-C2)
   - Cultural context adaptation
@@ -23,8 +25,8 @@ This project implements the user interface components for an AI-powered language
   - Immediate pronunciation feedback
   - Grammar correction
   - Natural language processing
-  
 - **Adaptive Learning System**
+
   - Dynamic difficulty adjustment
   - Personalized vocabulary expansion
   - Progress tracking
@@ -37,24 +39,28 @@ This project implements the user interface components for an AI-powered language
   - Multi-modal interaction options
 
 ## Technologies Used
+
 - React
 - Styled Components
 - Web Speech API
 - React Context API
 
 ## Prerequisites
+
 - Node.js (v18 or higher)
 - npm or yarn
 
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/ai-language-learning
 cd ai-language-learning
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 # or
@@ -62,6 +68,7 @@ yarn install
 ```
 
 3. Start the development server:
+
 ```bash
 npm start
 # or
@@ -69,6 +76,7 @@ yarn start
 ```
 
 ## Project Structure
+
 ```
 src/
   ├── components/
@@ -86,16 +94,20 @@ src/
 ## Component Details
 
 ### ScenarioSelection
+
 Browse and select from various conversation scenarios:
+
 ```javascript
 const ScenarioSelection = ({ onScenarioSelect }) => {
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState("All");
   // Component implementation
 };
 ```
 
 ### Conversation Interface
+
 Real-time conversation with AI tutor:
+
 ```javascript
 const Conversation = ({ scenarioId }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -104,7 +116,9 @@ const Conversation = ({ scenarioId }) => {
 ```
 
 ### Review Component
+
 Post-conversation feedback and analysis:
+
 ```javascript
 const Review = ({ transcript }) => {
   const [rating, setRating] = useState(5);
@@ -113,6 +127,7 @@ const Review = ({ transcript }) => {
 ```
 
 ## Implementation Notes
+
 - Uses mock data for demonstration purposes
 - Real implementation requires integration with AI language models
 - Styling follows modern language learning app patterns
@@ -120,6 +135,7 @@ const Review = ({ transcript }) => {
 - Implements Web Speech API for voice recognition
 
 ## Future Enhancements
+
 - [ ] Integration with advanced AI language models
 - [ ] Expanded scenario database
 - [ ] Enhanced pronunciation analysis
@@ -128,6 +144,7 @@ const Review = ({ transcript }) => {
 - [ ] Multi-language support expansion
 
 ## Contributing
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
@@ -135,9 +152,11 @@ const Review = ({ transcript }) => {
 5. Open a Pull Request
 
 ## License
+
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
 ## Acknowledgments
+
 - Built using modern language learning methodologies
 - Implements CEFR language proficiency standards
 - Voice recognition powered by Web Speech API

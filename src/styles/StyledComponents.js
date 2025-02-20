@@ -1,5 +1,5 @@
 import styled, { keyframes } from 'styled-components';
-import { useTheme } from '../context/ThemeContext';
+
 
 export const pulseAnimation = keyframes`
   0% { transform: scale(1); }
@@ -129,6 +129,3 @@ export const StarButton = styled.button`
   }
 `;
 
-// Add other styled components from the original file...
-
-const theme = useTheme(); // If you plan to use this elsewhere in the component
