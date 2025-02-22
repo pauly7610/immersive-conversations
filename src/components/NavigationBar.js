@@ -1,10 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
+import { useTheme } from '../context/ThemeContext';
 
 const Nav = styled.nav`
-  background-color: #58cc02;
-  padding: 10px;
+  background-color: ${({ theme }) => theme.colors.primary.main};
+  padding: ${({ theme }) => theme.spacing[3]};
 `;
 
 const NavList = styled.ul`
@@ -16,13 +17,13 @@ const NavList = styled.ul`
 `;
 
 const NavItem = styled.li`
-  margin: 0 10px;
+  margin: 0 ${({ theme }) => theme.spacing[2]};
 `;
 
 const StyledLink = styled(NavLink)`
-  color: white;
+  color: ${({ theme }) => theme.colors.light.background};
   text-decoration: none;
-  font-weight: bold;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
 
   &.active {
     text-decoration: underline;
@@ -30,9 +31,11 @@ const StyledLink = styled(NavLink)`
 `;
 
 const NavigationBar = () => {
+  const { theme } = useTheme();
+
   return (
-    <Nav role="navigation" aria-label="Main Navigation">
-      <NavList>
+    <Nav theme={theme} role="navigation" aria-label="Main Navigation">
+      <NavList theme={theme}>
         <NavItem>
           <StyledLink to="/" exact activeClassName="active" tabIndex="0">
             Home

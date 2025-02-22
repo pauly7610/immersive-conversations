@@ -1,15 +1,38 @@
 import React from 'react';
+import styled from 'styled-components';
+import { useTheme } from '../context/ThemeContext';
+
+const BadgeContainer = styled.div`
+  border: 1px solid ${({ theme }) => theme.colors.primary.main};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  padding: ${({ theme }) => theme.spacing[3]};
+  margin: ${({ theme }) => theme.spacing[2]} 0;
+  display: flex;
+  align-items: center;
+`;
+
+const Icon = styled.img`
+  margin-right: ${({ theme }) => theme.spacing[2]};
+  width: 30px;
+`;
+
+const Title = styled.h3`
+  color: ${({ theme }) => theme.colors.primary.main};
+  margin: 0;
+`;
 
 const Badge = ({ title, description, icon }) => {
-    return (
-        <div className="badge" style={{ border: '1px solid #58cc02', borderRadius: '5px', padding: '10px', margin: '5px 0', display: 'flex', alignItems: 'center' }}>
-            {icon && <img src={icon} alt={`${title} icon`} style={{ marginRight: '10px', width: '30px' }} />}
-            <div>
-                <h3 style={{ color: '#58cc02', margin: '0' }}>{title}</h3>
-                <p style={{ margin: '0' }}>{description}</p>
-            </div>
-        </div>
-    );
+  const { theme } = useTheme();
+
+  return (
+    <BadgeContainer theme={theme}>
+      {icon && <Icon src={icon} alt={`${title} icon`} theme={theme} />}
+      <div>
+        <Title theme={theme}>{title}</Title>
+        <p>{description}</p>
+      </div>
+    </BadgeContainer>
+  );
 };
 
 export default Badge; 

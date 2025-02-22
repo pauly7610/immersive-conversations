@@ -1,6 +1,37 @@
 import React, { useState } from 'react';
+import styled from 'styled-components';
+import { useTheme } from '../context/ThemeContext';
+
+const ProfileContainer = styled.div`
+  background-color: ${({ theme }) => theme.colors.light.background};
+  color: ${({ theme }) => theme.colors.light.foreground};
+  padding: ${({ theme }) => theme.spacing[4]};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+`;
+
+const InputField = styled.input`
+  width: 100%;
+  padding: ${({ theme }) => theme.spacing[2]};
+  margin-bottom: ${({ theme }) => theme.spacing[3]};
+  border: 1px solid ${({ theme }) => theme.colors.light.border};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+`;
+
+const SaveButton = styled.button`
+  background-color: ${({ theme }) => theme.colors.primary.main};
+  color: ${({ theme }) => theme.colors.light.background};
+  padding: ${({ theme }) => theme.spacing[2]} ${({ theme }) => theme.spacing[3]};
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  transition: background-color ${({ theme }) => theme.transitions.default};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primary.hover};
+  }
+`;
 
 const UserProfile = () => {
+    const { theme } = useTheme();
     const [userInfo, setUserInfo] = useState({
         name: 'John Doe',
         email: 'john.doe@example.com',
@@ -21,17 +52,29 @@ const UserProfile = () => {
     };
 
     return (
-        <div>
+        <ProfileContainer theme={theme}>
             <h2>User Profile</h2>
             <img src={userInfo.avatar} alt="User Avatar" width="100" />
             <form>
                 <label>
                     Name:
-                    <input type="text" name="name" value={userInfo.name} onChange={handleInputChange} />
+                    <InputField 
+                        theme={theme}
+                        type="text" 
+                        name="name" 
+                        value={userInfo.name} 
+                        onChange={handleInputChange}
+                    />
                 </label>
                 <label>
                     Email:
-                    <input type="email" name="email" value={userInfo.email} onChange={handleInputChange} />
+                    <InputField 
+                        theme={theme}
+                        type="email" 
+                        name="email" 
+                        value={userInfo.email} 
+                        onChange={handleInputChange}
+                    />
                 </label>
                 <label>
                     Language Preference:
@@ -46,7 +89,8 @@ const UserProfile = () => {
                     <input type="file" onChange={handleAvatarChange} />
                 </label>
             </form>
-        </div>
+            <SaveButton theme={theme}>Save Profile</SaveButton>
+        </ProfileContainer>
     );
 };
 

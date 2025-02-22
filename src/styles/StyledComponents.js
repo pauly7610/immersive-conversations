@@ -1,6 +1,5 @@
 import styled, { keyframes } from 'styled-components';
 
-
 export const pulseAnimation = keyframes`
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
@@ -13,56 +12,65 @@ export const fadeIn = keyframes`
 `;
 
 export const Container = styled.div`
-  max-width: 800px;
+  max-width: ${({ theme }) => theme.container.maxWidth.lg};
   margin: 0 auto;
-  padding: 20px;
-  background-color: ${({ theme }) => (theme === 'light' ? '#f0f8ff' : '#333')};
-  color: ${({ theme }) => (theme === 'light' ? '#000' : '#fff')};
-  font-family: 'Arial', sans-serif;
-  @media (max-width: 600px) {
-      padding: 10px;
+  padding: ${({ theme }) => theme.spacing[4]}px;
+  background-color: ${({ theme }) => theme.colors.light.background};
+  color: ${({ theme }) => theme.colors.light.text};
+  font-family: ${({ theme }) => theme.typography.fontFamily.sans.join(', ')};
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    padding: ${({ theme }) => theme.spacing[4]};
   }
 `;
 
 export const TranscriptContainer = styled.div`
   max-height: 400px;
   overflow-y: auto;
-  margin-bottom: 20px;
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
 `;
 
 export const MessageBubble = styled.div`
-  background-color: ${({ speaker }) => (speaker === 'AI' ? '#e0f7fa' : '#58cc02')};
-  color: ${({ speaker }) => (speaker === 'AI' ? '#000' : '#fff')};
-  padding: 10px;
-  border-radius: 10px;
-  margin: 5px 0;
+  background-color: ${({ isUser, theme }) => 
+    isUser ? theme.colors.secondary.main : theme.colors.light.muted};
+  color: ${({ isUser, theme }) => 
+    isUser ? theme.colors.light.background : theme.colors.light.foreground};
+  padding: ${({ theme }) => theme.spacing[3]};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  margin: ${({ theme }) => theme.spacing[2]} 0;
   animation: ${fadeIn} 0.5s ease-in-out;
-  font-size: 16px;
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
 `;
 
 export const InputContainer = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
 `;
 
 export const InputBox = styled.input`
   flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-right: 10px;
+  padding: ${({ theme }) => theme.spacing[2]};
+  border: 1px solid ${({ theme }) => theme.colors.light.border};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  margin-right: ${({ theme }) => theme.spacing[2]};
 `;
 
-export const SendButton = styled.button`
-  padding: 10px 20px;
-  background-color: #58cc02;
-  color: white;
+export const Button = styled.button`
+  background-color: ${({ theme }) => theme.colors.primary.main};
+  color: ${({ theme }) => theme.colors.light.background};
+  padding: ${({ theme }) => theme.spacing[2]} ${({ theme }) => theme.spacing[3]};
   border: none;
-  border-radius: 5px;
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
   cursor: pointer;
+  transition: background-color ${({ theme }) => theme.transitions.default};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primary.hover};
+  }
+
   &:disabled {
-    background-color: #ccc;
+    background-color: ${({ theme }) => theme.colors.light.muted};
   }
 `;
 
@@ -88,8 +96,7 @@ export const EndButton = styled.button`
 export const CategoryRibbon = styled.div`
   display: flex;
   justify-content: space-around;
-  padding: 10px;
-  background-color: #f0f0f0;
+  margin-bottom: ${({ theme }) => theme.spacing[4]}px;
 `;
 
 export const RibbonButton = styled.button`
@@ -97,16 +104,8 @@ export const RibbonButton = styled.button`
   border: none;
   font-size: 16px;
   cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 20px;
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
-
   &.active {
-    background-color: #58cc02;
-    color: white;
+    font-weight: bold;
   }
 `;
 
@@ -134,9 +133,73 @@ export const ScenarioCarousel = styled.div`
   // Add your styles here
 `;
 
-// Define ScenarioCard if needed
 export const ScenarioCard = styled.div`
-  // Add your styles here
+  background: ${({ theme }) => theme.colors.light.background};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: ${({ theme }) => theme.spacing[4]};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+`;
+
+export const ScenarioTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.light.text};
+  margin-bottom: ${({ theme }) => theme.spacing[2]};
+`;
+
+export const DurationText = styled.span`
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.light.mutedForeground};
+  display: block;
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
+`;
+
+export const DifficultyBadge = styled.span`
+  color: ${({ type }) => {
+    switch (type) {
+      case 'food': return '#58cc02';
+      case 'job': case 'work': return '#ff4b4b';
+      case 'social': return '#ffc800';
+      case 'travel': return '#ce82ff';
+      default: return '#58cc02';
+    }
+  }};
+  font-size: 14px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+`;
+
+export const StartButton = styled.button`
+  width: 100%;
+  background-color: ${({ type }) => {
+    switch (type) {
+      case 'food': return '#58cc02';
+      case 'job': case 'work': return '#ff4b4b';
+      case 'social': return '#ffc800';
+      case 'travel': return '#ce82ff';
+      default: return '#58cc02';
+    }
+  }};
+  color: white;
+  padding: ${({ theme }) => theme.spacing[3]};
+  border-radius: 9999px;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  transition: all ${({ theme }) => theme.transitions.default};
+
+  &:hover {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+    background-color: ${({ type }) => {
+      switch (type) {
+        case 'food': return '#46a302';
+        case 'job': case 'work': return '#e53e3e';
+        case 'social': return '#e6b400';
+        case 'travel': return '#b85eff';
+        default: return '#46a302';
+      }
+    }};
+  }
 `;
 
 // Define Illustration if needed
@@ -144,18 +207,8 @@ export const Illustration = styled.img`
   // Add your styles here
 `;
 
-// Define DifficultyBadge if needed
-export const DifficultyBadge = styled.span`
-  // Add your styles here
-`;
-
 // Define Duration if needed
 export const Duration = styled.span`
-  // Add your styles here
-`;
-
-// Define StartButton if needed
-export const StartButton = styled.button`
   // Add your styles here
 `;
 
