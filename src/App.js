@@ -2,7 +2,6 @@ import React, { useState, Suspense, lazy } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import ScenarioSelection from './components/ScenarioSelection';
 import WarmUp from './components/WarmUp';
-import Conversation from './components/Conversation';
 import Review from './components/Review';
 import UserProfile from './components/UserProfile';
 import ProgressChart from './components/ProgressChart';

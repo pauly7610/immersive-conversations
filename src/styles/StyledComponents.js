@@ -129,3 +129,33 @@ export const StarButton = styled.button`
   }
 `;
 
+// Define ScenarioCarousel if needed
+export const ScenarioCarousel = styled.div`
+  // Add your styles here
+`;
+
+// Define ScenarioCard if needed
+export const ScenarioCard = styled.div`
+  // Add your styles here
+`;
+
+// Define Illustration if needed
+export const Illustration = styled.img`
+  // Add your styles here
+`;
+
+// Define DifficultyBadge if needed
+export const DifficultyBadge = styled.span`
+  // Add your styles here
+`;
+
+// Define Duration if needed
+export const Duration = styled.span`
+  // Add your styles here
+`;
+
+// Define StartButton if needed
+export const StartButton = styled.button`
+  // Add your styles here
+`;
+
