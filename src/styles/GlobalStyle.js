@@ -9,10 +9,10 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    font-family: 'Arial', sans-serif;
-    background-color: ${({ theme }) => theme.colors.light.background};
-    color: ${({ theme }) => theme.colors.light.text};
-    line-height: 1.5;
+    font-family: ${theme.typography.fontFamily.sans.join(', ')};
+    background-color: ${theme.colors.light.background};
+    color: ${theme.colors.light.foreground};
+    line-height: ${theme.typography.lineHeight.normal};
   }
 
   ::-webkit-scrollbar {
@@ -40,7 +40,9 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   button {
+    font-family: inherit;
     cursor: pointer;
+    transition: all ${theme.transitions.default};
   }
 
   input, textarea {

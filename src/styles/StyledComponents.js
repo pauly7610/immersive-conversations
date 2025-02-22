@@ -14,7 +14,7 @@ export const fadeIn = keyframes`
 export const Container = styled.div`
   max-width: ${({ theme }) => theme.container.maxWidth.lg};
   margin: 0 auto;
-  padding: ${({ theme }) => theme.spacing[4]}px;
+  padding: ${({ theme }) => theme.spacing[6]};
   background-color: ${({ theme }) => theme.colors.light.background};
   color: ${({ theme }) => theme.colors.light.text};
   font-family: ${({ theme }) => theme.typography.fontFamily.sans.join(', ')};
@@ -96,7 +96,8 @@ export const EndButton = styled.button`
 export const CategoryRibbon = styled.div`
   display: flex;
   justify-content: space-around;
-  margin-bottom: ${({ theme }) => theme.spacing[4]}px;
+  padding: 10px;
+  background-color: #f0f0f0;
 `;
 
 export const RibbonButton = styled.button`
@@ -104,8 +105,16 @@ export const RibbonButton = styled.button`
   border: none;
   font-size: 16px;
   cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 20px;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
   &.active {
-    font-weight: bold;
+    background-color: #58cc02;
+    color: white;
   }
 `;
 
