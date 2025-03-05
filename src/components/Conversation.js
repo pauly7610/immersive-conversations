@@ -159,7 +159,12 @@ const getInitialResponses = (language, scenario) => {
         { text: '¿Qué me recomienda?', translation: 'What do you recommend?' }
       ],
       airport: [
-        { text: '¿Dónde está el mostrador de facturación?', translation: 'Where is the check-in counter?' }
+        { text: '¿Dónde está el mostrador de facturación?', translation: 'Where is the check-in counter?' },
+        { text: '¿Cuánto tiempo falta para el embarque?', translation: 'How long until boarding?' }
+      ],
+      hotel: [
+        { text: '¿Puedo hacer el check-in temprano?', translation: 'Can I check in early?' },
+        { text: '¿Hay servicio de habitaciones?', translation: 'Is there room service?' }
       ]
     },
     french: {
@@ -168,10 +173,94 @@ const getInitialResponses = (language, scenario) => {
         { text: 'Parlez-moi de votre expérience.', translation: 'Tell me about your experience.' }
       ],
       party: [
-        { text: 'Joyeux anniversaire!', translation: 'Happy birthday!' }
+        { text: 'Joyeux anniversaire!', translation: 'Happy birthday!' },
+        { text: 'Quelle musique aimez-vous?', translation: 'What music do you like?' }
+      ],
+      travel: [
+        { text: 'Où est la gare?', translation: 'Where is the train station?' },
+        { text: 'Pouvez-vous me recommander un restaurant?', translation: 'Can you recommend a restaurant?' }
       ]
     },
-    // ... similar mappings for each language and scenario type
+    german: {
+      shopping: [
+        { text: 'Wie viel kostet das?', translation: 'How much does this cost?' },
+        { text: 'Haben Sie das in einer anderen Größe?', translation: 'Do you have this in another size?' }
+      ],
+      meeting: [
+        { text: 'Können wir das Meeting verschieben?', translation: 'Can we reschedule the meeting?' },
+        { text: 'Was ist die Agenda für heute?', translation: 'What is the agenda for today?' }
+      ]
+    },
+    italian: {
+      restaurant: [
+        { text: 'Posso vedere il menu?', translation: 'Can I see the menu?' },
+        { text: 'Qual è il piatto del giorno?', translation: 'What is the dish of the day?' }
+      ],
+      sightseeing: [
+        { text: 'Dove si trova il museo?', translation: 'Where is the museum?' },
+        { text: 'Quali sono le attrazioni principali?', translation: 'What are the main attractions?' }
+      ]
+    },
+    portuguese: {
+      business: [
+        { text: 'Qual é o seu papel na empresa?', translation: 'What is your role in the company?' },
+        { text: 'Podemos discutir o contrato?', translation: 'Can we discuss the contract?' }
+      ],
+      vacation: [
+        { text: 'Onde fica a praia mais próxima?', translation: 'Where is the nearest beach?' },
+        { text: 'Quais atividades você recomenda?', translation: 'What activities do you recommend?' }
+      ]
+    },
+    japanese: {
+      work: [
+        { text: 'このプロジェクトの締め切りはいつですか？', translation: 'When is the deadline for this project?', pronunciation: 'Kono pu-ro-je-ku-to no shi-me-ki-ri wa i-tsu de-su ka?' },
+        { text: '会議は何時に始まりますか？', translation: 'What time does the meeting start?', pronunciation: 'Kai-gi wa nan-ji ni ha-ji-ma-ri-ma-su ka?' }
+      ],
+      travel: [
+        { text: '駅はどこですか？', translation: 'Where is the station?', pronunciation: 'E-ki wa do-ko de-su ka?' },
+        { text: 'おすすめの観光地はありますか？', translation: 'Do you have any sightseeing recommendations?', pronunciation: 'O-su-su-me no kan-ko-u-chi wa a-ri-ma-su ka?' }
+      ]
+    },
+    korean: {
+      dining: [
+        { text: '메뉴를 볼 수 있을까요?', translation: 'Can I see the menu?', pronunciation: 'Me-nyu-reul bol su i-sseul-kka-yo?' },
+        { text: '오늘의 추천 요리는 무엇인가요?', translation: 'What is today\'s special?', pronunciation: 'O-neul-ui chu-cheon yo-ri-neun mu-eot-in-ga-yo?' }
+      ],
+      shopping: [
+        { text: '이것은 얼마입니까?', translation: 'How much is this?', pronunciation: 'I-geot-eun eol-ma-im-ni-kka?' },
+        { text: '다른 색상이 있나요?', translation: 'Do you have this in another color?', pronunciation: 'Da-reun saek-sang-i it-na-yo?' }
+      ]
+    },
+    russian: {
+      hotel: [
+        { text: 'Можно ли заказать завтрак в номер?', translation: 'Can I order breakfast to my room?', pronunciation: 'Mozh-no li za-ka-zat zav-trak v no-mer?' },
+        { text: 'Какой у вас Wi-Fi пароль?', translation: 'What is your Wi-Fi password?', pronunciation: 'Ka-koy u vas Wi-Fi pa-rol?' }
+      ],
+      transport: [
+        { text: 'Где находится ближайшая автобусная остановка?', translation: 'Where is the nearest bus stop?', pronunciation: 'Gde na-kho-dits-ya bli-zhai-sha-ya av-to-bus-na-ya os-ta-nov-ka?' },
+        { text: 'Как добраться до аэропорта?', translation: 'How do I get to the airport?', pronunciation: 'Kak do-brat-sya do ae-ro-por-ta?' }
+      ]
+    },
+    arabic: {
+      market: [
+        { text: 'كم سعر هذا؟', translation: 'How much is this?', pronunciation: 'Kam si\'r ha-dha?' },
+        { text: 'هل لديك حجم أكبر؟', translation: 'Do you have a larger size?', pronunciation: 'Hal la-day-ka hajm ak-bar?' }
+      ],
+      education: [
+        { text: 'ما هي المواد التي تدرسها؟', translation: 'What subjects do you teach?', pronunciation: 'Ma hi-ya al-ma-wad al-la-ti ta-dru-su-ha?' },
+        { text: 'متى تبدأ الحصة؟', translation: 'When does the class start?', pronunciation: 'Ma-ta tab-da al-his-sa?' }
+      ]
+    },
+    english: {
+      general: [
+        { text: 'How are you today?', translation: '' },
+        { text: 'What\'s your favorite hobby?', translation: '' }
+      ],
+      travel: [
+        { text: 'Where is the nearest train station?', translation: '' },
+        { text: 'Can you recommend a good restaurant?', translation: '' }
+      ]
+    }
   };
 
   return responseMap[language]?.[scenario] || [];
@@ -206,21 +295,6 @@ const Conversation = ({ scenario }) => {
                        scenario.language === 'arabic' ? 'ar-AR' :
                        'en-US';
 
-    useEffect(() => {
-        setMessages([]);
-        setMessageIds(new Set());
-        const initialMessage = welcomeMessages[scenarioLanguage] || welcomeMessages.english;
-        const responses = getInitialResponses(scenarioLanguage, scenarioType);
-        addMessage(initialMessage, false);
-        setSuggestedResponses(responses);
-    }, [scenario]);
-
-    useEffect(() => {
-        if (messageListRef.current) {
-            messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
-        }
-    }, [messages, suggestedResponses]);
-
     const addMessage = (text, isUser) => {
         const messageId = `${text}-${isUser}`;
         if (!messageIds.has(messageId)) {
@@ -228,6 +302,21 @@ const Conversation = ({ scenario }) => {
             setMessageIds(prev => new Set(prev).add(messageId));
         }
     };
+
+    useEffect(() => {
+        setMessages([]);
+        setMessageIds(new Set());
+        const initialMessage = welcomeMessages[scenarioLanguage] || welcomeMessages.english;
+        const responses = getInitialResponses(scenarioLanguage, scenarioType);
+        addMessage(initialMessage, false);
+        setSuggestedResponses(responses);
+    }, [scenario, addMessage, scenarioLanguage, scenarioType]);
+
+    useEffect(() => {
+        if (messageListRef.current) {
+            messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+        }
+    }, [messages, suggestedResponses]);
 
     const speakMessage = (text) => {
         const utterance = new SpeechSynthesisUtterance(text);
