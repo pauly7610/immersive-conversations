@@ -153,6 +153,22 @@ export const scenarios = [
         illustration: 'social-dating.png',
         language: 'Portuguese',
         keywords: ['dating', 'personal', 'interests', 'romantic conversation'],
+        prompt: 'You are on a first date at a café. Introduce yourself and ask questions to get to know the other person better.',
+        description: 'Practice romantic conversation in Portuguese, focusing on personal introductions and getting to know someone.',
+        learningObjectives: [
+            'Learn dating-related vocabulary',
+            'Practice personal questions',
+            'Discuss interests and hobbies',
+            'Improve conversational Portuguese'
+        ],
+        keyVocabulary: [
+            { word: 'Olá', translation: 'Hello', context: 'Greeting your date' },
+            { word: 'Prazer em conhecê-lo/la', translation: 'Nice to meet you', context: 'Initial introduction' },
+            { word: 'Interesses', translation: 'Interests', context: 'Discussing hobbies' },
+            { word: 'Gosto de', translation: 'I like', context: 'Expressing preferences' },
+            { word: 'Trabalho', translation: 'Work', context: 'Discussing profession' }
+        ],
+        difficulty: 'Medium',
         type: 'social'
     },
     {

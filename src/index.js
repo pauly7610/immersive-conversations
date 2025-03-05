@@ -1,23 +1,24 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ThemeProvider } from './context/ThemeContext';
 import { GlobalStyle } from './styles/GlobalStyle';
 
-ReactDOM.render(
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
     <ThemeProvider>
       <GlobalStyle />
       <App />
     </ThemeProvider>
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
 
 // Service Worker registration for offline capabilities
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').then(
+    const swPath = process.env.PUBLIC_URL + '/service-worker.js';
+    navigator.serviceWorker.register(swPath).then(
       (registration) => {
         console.log('Service Worker registered with scope:', registration.scope);
       },

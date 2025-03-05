@@ -1,0 +1,40 @@
+name: API Proxy
+
+on:
+  repository_dispatch:
+    types: [api-request]
+
+jobs:
+  proxy-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Make API Request
+        id: api_request
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.HUGGING_FACE_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '${{ github.event.client_payload.body }}' \
+            https://api-inference.huggingface.co/models/${{ github.event.client_payload.model }})
+
+          # GitHub Actions doesn't allow setting outputs with multiline strings directly
+          RESPONSE_ESCAPED="${RESPONSE//'%'/'%25'}"
+          RESPONSE_ESCAPED="${RESPONSE_ESCAPED//$'\n'/'%0A'}"
+          RESPONSE_ESCAPED="${RESPONSE_ESCAPED//$'\r'/'%0D'}"
+
+          echo "::set-output name=response::$RESPONSE_ESCAPED"
+
+      - name: Create Response Issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = ${{ github.event.client_payload.issue_number }};
+            const response = `${{ steps.api_request.outputs.response }}`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: response
+            });

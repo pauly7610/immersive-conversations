@@ -81,6 +81,12 @@ const VoiceRecognitionComponent = () => {
 
   const processInput = async (input) => {
     const apiKey = process.env.REACT_APP_HUGGING_FACE_API_KEY;
+    
+    if (!apiKey) {
+      setResponse('Error: API key is missing. Please check your environment configuration.');
+      return;
+    }
+    
     const model = 'distilgpt2';
 
     try {
@@ -103,7 +109,7 @@ const VoiceRecognitionComponent = () => {
       setResponse(data[0]?.generated_text || 'No response');
     } catch (error) {
       console.error('Error fetching response:', error);
-      setResponse('Error fetching response');
+      setResponse(`Error: ${error.message}`);
     }
   };
 

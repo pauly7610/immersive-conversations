@@ -1,8 +1,9 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { Suspense, lazy, Component } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { useTheme } from './context/ThemeContext';
 import { ThemeProvider } from 'styled-components';
 import { GlobalStyle } from './styles/GlobalStyle';
+import { ConversationProvider } from './context/ConversationContext';
 
 // Import components
 import ScenarioSelection from './components/ScenarioSelection';
@@ -17,72 +18,60 @@ import { Container } from './styles/StyledComponents';
 
 const ConversationComponent = lazy(() => import('./components/Conversation'));
 
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error caught by boundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong. Please refresh the page.</div>;
+    }
+    return this.props.children;
+  }
+}
+
 const App = () => {
     const { theme } = useTheme();
-    const [currentScreen, setCurrentScreen] = useState('selection');
-    const [selectedScenarioId, setSelectedScenarioId] = useState(null);
-    const [conversationTranscript, setConversationTranscript] = useState([]);
-
-    const handleScenarioSelect = (id) => {
-        setSelectedScenarioId(id);
-        setCurrentScreen('warmup');
-    };
-
-    const handleWarmUpComplete = () => {
-        setCurrentScreen('conversation');
-    };
-
-    const handleConversationEnd = (transcript) => {
-        setConversationTranscript(transcript);
-        setCurrentScreen('review');
-    };
 
     return (
         <ThemeProvider theme={theme}>
             <GlobalStyle />
-            <Router>
-                <NavigationBar />
-                <Container>
-                    <Routes>
-                        <Route 
-                            path="/" 
-                            element={<ScenarioSelection onScenarioSelect={handleScenarioSelect} />} 
-                        />
-                        <Route 
-                            path="/scenario/:id" 
-                            element={<ScenarioDetail />} 
-                        />
-                        <Route 
-                            path="/warmup" 
-                            element={<WarmUp scenarioId={selectedScenarioId} onWarmUpComplete={handleWarmUpComplete} />} 
-                        />
-                        <Route 
-                            path="/conversation" 
-                            element={
-                                <Suspense fallback={<div>Loading...</div>}>
-                                    <ConversationComponent scenarioId={selectedScenarioId} onConversationEnd={handleConversationEnd} />
-                                </Suspense>
-                            } 
-                        />
-                        <Route 
-                            path="/review" 
-                            element={<Review transcript={conversationTranscript} />} 
-                        />
-                        <Route 
-                            path="/profile" 
-                            element={<UserProfile />} 
-                        />
-                        <Route 
-                            path="/progress" 
-                            element={<ProgressChart />} 
-                        />
-                        <Route 
-                            path="/leaderboard" 
-                            element={<Leaderboard />} 
-                        />
-                    </Routes>
-                </Container>
-            </Router>
+            <ErrorBoundary>
+                <ConversationProvider>
+                    <Router>
+                        <NavigationBar />
+                        <Container>
+                            <Routes>
+                                <Route path="/" element={<ScenarioSelection />} />
+                                <Route path="/scenario/:id" element={<ScenarioDetail />} />
+                                <Route path="/warmup" element={<WarmUp />} />
+                                <Route 
+                                    path="/conversation" 
+                                    element={
+                                        <Suspense fallback={<div>Loading...</div>}>
+                                            <ConversationComponent />
+                                        </Suspense>
+                                    } 
+                                />
+                                <Route path="/review" element={<Review />} />
+                                <Route path="/profile" element={<UserProfile />} />
+                                <Route path="/progress" element={<ProgressChart />} />
+                                <Route path="/leaderboard" element={<Leaderboard />} />
+                            </Routes>
+                        </Container>
+                    </Router>
+                </ConversationProvider>
+            </ErrorBoundary>
         </ThemeProvider>
     );
 };

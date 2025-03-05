@@ -1,11 +1,11 @@
 const CACHE_NAME = 'language-learning-app-cache-v1';
+const BASE_URL = '/Immersive-Conversations'; // GitHub Pages base path
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/static/js/bundle.js',
-  '/static/js/main.chunk.js',
-  '/static/js/0.chunk.js',
-  '/static/css/main.chunk.css',
+  `${BASE_URL}/`,
+  `${BASE_URL}/index.html`,
+  `${BASE_URL}/static/js/main.js`,
+  `${BASE_URL}/static/js/chunk.js`,
+  `${BASE_URL}/static/css/main.css`,
   // Add other assets you want to cache
 ];
 

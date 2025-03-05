@@ -3,6 +3,7 @@ import { Container, StartButton } from '../styles/StyledComponents';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useTheme } from '../context/ThemeContext';
+import { getTransliteration, needsTransliteration } from '../utils/transliteration';
 
 const SpeechPrompt = styled.div`
   background-color: #f0f4f8;
@@ -51,6 +52,15 @@ const SpanishWord = styled.h4`
   margin: 0 0 5px 0;
 `;
 
+const Transliteration = styled.div`
+  font-style: italic;
+  font-size: 0.85em;
+  color: #666;
+  margin-top: 3px;
+  border-top: 1px dashed #e0e0e0;
+  padding-top: 3px;
+`;
+
 const Translation = styled.p`
   color: #666;
   margin: 0;
@@ -63,39 +73,72 @@ const Context = styled.small`
 `;
 
 const WarmUpContainer = styled.div`
+  max-width: ${({ theme }) => theme.container.maxWidth.md};
+  margin: 0 auto;
+  padding: ${({ theme }) => theme.spacing[4]};
   background-color: ${({ theme }) => theme.colors.light.background};
-  border-radius: 1rem;
-  box-shadow: ${({ theme }) => theme.shadows.sm};
-  padding: 1.5rem;
-  transition: box-shadow 300ms ease-in-out;
-
-  &:hover {
-    box-shadow: ${({ theme }) => theme.shadows.xl};
-  }
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  box-shadow: ${({ theme }) => theme.shadows.md};
 `;
 
-const Title = styled.h3`
-  font-size: 2rem;
-  font-weight: bold;
-  color: #4b4b4b;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.015em;
+const SectionTitle = styled.h2`
+  color: ${({ theme }) => theme.colors.light.foreground};
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  margin-bottom: ${({ theme }) => theme.spacing[3]};
 `;
 
-const Button = styled.button`
-  width: 100%;
+const PromptCard = styled.div`
+  background-color: #f0f8ff;
+  border: 1px solid ${({ theme }) => theme.colors.light.border};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  padding: ${({ theme }) => theme.spacing[4]};
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
+`;
+
+const ActionButton = styled.button`
   background-color: ${({ theme }) => theme.colors.primary.main};
-  color: ${({ theme }) => theme.colors.light.background};
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: bold;
-  transition: background-color 300ms ease-in-out;
-
+  color: white;
+  padding: ${({ theme }) => theme.spacing[3]};
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
+  transition: background-color ${({ theme }) => theme.transitions.default};
+  
   &:hover {
     background-color: ${({ theme }) => theme.colors.primary.hover};
   }
 `;
+
+const FeedbackContainer = styled.div`
+  background-color: ${({ status, theme }) => 
+    status === 'good' ? '#e6f3e6' : 
+    status === 'needs-improvement' ? '#fff3e0' : 
+    theme.colors.light.muted};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  padding: ${({ theme }) => theme.spacing[3]};
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
+`;
+
+// Language code mapping
+const getLanguageCode = (language) => {
+  const languageMap = {
+    'Spanish': 'es-ES',
+    'French': 'fr-FR',
+    'German': 'de-DE',
+    'Italian': 'it-IT',
+    'Portuguese': 'pt-PT',
+    'Japanese': 'ja-JP',
+    'Korean': 'ko-KR',
+    'Russian': 'ru-RU',
+    'Arabic': 'ar-SA',
+    'English': 'en-US'
+  };
+  
+  return languageMap[language] || 'en-US';
+};
 
 const WarmUp = () => {
     const location = useLocation();
@@ -107,32 +150,60 @@ const WarmUp = () => {
     const [transcript, setTranscript] = useState('');
     const [feedback, setFeedback] = useState('');
     const [feedbackStatus, setFeedbackStatus] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [speechSupported, setSpeechSupported] = useState(true);
 
     // Speech Recognition setup
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = scenario.language === 'Spanish' ? 'es-ES' : 'en-US';
+    recognition.lang = getLanguageCode(scenario.language);
 
     useEffect(() => {
         if (!scenario) return;
         setPrompt(scenario.prompt);
     }, [scenario]);
 
-    const startListening = () => {
-        recognition.onresult = (event) => {
-            const speechToText = event.results[0][0].transcript;
-            setTranscript(speechToText);
-            evaluateSpeech(speechToText);
-        };
+    useEffect(() => {
+        // Check if speech recognition is supported
+        if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+            setSpeechSupported(false);
+        }
+    }, []);
 
-        recognition.start();
+    const startListening = () => {
+        if (!SpeechRecognition) {
+            setFeedback("Speech recognition is not supported in your browser.");
+            return;
+        }
+        
+        try {
+            recognition.onresult = (event) => {
+                const speechToText = event.results[0][0].transcript;
+                setTranscript(speechToText);
+                evaluateSpeech(speechToText);
+            };
+            
+            recognition.onerror = (event) => {
+                setFeedback(`Speech recognition error: ${event.error}`);
+            };
+
+            recognition.start();
+        } catch (error) {
+            console.error("Speech recognition error:", error);
+            setFeedback("Failed to start speech recognition. Please try again.");
+        }
     };
 
     const evaluateSpeech = async (text) => {
+        setIsLoading(true);
         try {
             const apiKey = process.env.REACT_APP_HUGGING_FACE_API_KEY;
+            if (!apiKey) {
+                throw new Error('API key is missing. Please check your environment configuration.');
+            }
+            
             const response = await fetch('https://api-inference.huggingface.co/models/facebook/bart-large', {
                 method: 'POST',
                 headers: {
@@ -180,8 +251,10 @@ const WarmUp = () => {
             }
         } catch (error) {
             console.error('Error evaluating speech:', error);
-            setFeedback('Unable to process feedback');
+            setFeedback(`Error: ${error.message}`);
             setFeedbackStatus('neutral');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -197,27 +270,33 @@ const WarmUp = () => {
 
     return (
         <WarmUpContainer theme={theme}>
-            <Title theme={theme}>Warm Up</Title>
-            <Button theme={theme} onClick={startListening}>
-                Start Warm Up
-            </Button>
-
-            <SpeechPrompt>
+            <SectionTitle theme={theme}>Warm Up</SectionTitle>
+            <PromptCard>
                 <h3>Speaking Prompt</h3>
                 <p>{prompt}</p>
-            </SpeechPrompt>
+            </PromptCard>
 
             {scenario.keyVocabulary && (
                 <VocabularyContainer>
                     <h3>Key Vocabulary to Use</h3>
                     <VocabularyGrid>
-                        {scenario.keyVocabulary.map((vocab, index) => (
-                            <VocabularyCard key={index}>
-                                <SpanishWord>{vocab.word}</SpanishWord>
-                                <Translation>{vocab.translation}</Translation>
-                                <Context>{vocab.context}</Context>
-                            </VocabularyCard>
-                        ))}
+                        {scenario.keyVocabulary.map((vocab, index) => {
+                            const showTransliteration = needsTransliteration(scenario.language);
+                            const transliteration = showTransliteration 
+                                ? getTransliteration(vocab.word, scenario.language)
+                                : '';
+                            
+                            return (
+                                <VocabularyCard key={index}>
+                                    <SpanishWord>{vocab.word}</SpanishWord>
+                                    {showTransliteration && transliteration && (
+                                        <Transliteration>{transliteration}</Transliteration>
+                                    )}
+                                    <Translation>{vocab.translation}</Translation>
+                                    <Context>{vocab.context}</Context>
+                                </VocabularyCard>
+                            );
+                        })}
                     </VocabularyGrid>
                 </VocabularyContainer>
             )}
@@ -230,16 +309,31 @@ const WarmUp = () => {
             )}
 
             {feedback && (
-                <FeedbackArea status={feedbackStatus}>
+                <FeedbackContainer status={feedbackStatus}>
                     <h3>AI Language Feedback:</h3>
                     <p>{feedback}</p>
-                </FeedbackArea>
+                </FeedbackContainer>
             )}
 
-            {feedback && (
-                <Button theme={theme} onClick={handleContinue}>
+            {isLoading && (
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <p>Analyzing your response...</p>
+                    {/* You could add a spinner here */}
+                </div>
+            )}
+
+            {speechSupported ? (
+                <ActionButton theme={theme} onClick={handleContinue}>
                     Continue to Conversation
-                </Button>
+                </ActionButton>
+            ) : (
+                <div className="error-message">
+                    <h3>Speech Recognition Not Supported</h3>
+                    <p>Your browser doesn't support speech recognition. Please try using Chrome, Edge, or Safari.</p>
+                    <ActionButton theme={theme} onClick={handleContinue}>
+                        Skip to Conversation
+                    </ActionButton>
+                </div>
             )}
         </WarmUpContainer>
     );

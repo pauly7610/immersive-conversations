@@ -16,6 +16,7 @@ const ScenarioSelection = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { theme } = useTheme();
 
@@ -24,27 +25,22 @@ const ScenarioSelection = () => {
     : scenarios.filter(scenario => scenario.type === selectedCategory.toLowerCase());
 
   const handleScenarioSelect = async (scenario) => {
-    if (!scenario.prompt) {
-      navigate(`/scenario/${scenario.id}`, { state: { scenario } });
-      return;
-    }
-
     setLoading(true);
+    setError(null);
+    
     try {
+      // Call your Vercel API route instead of the API directly
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const apiKey = process.env.REACT_APP_HUGGING_FACE_API_KEY;
-      const model = 'distilgpt2';
-
-      const res = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+      const response = await fetch('/api/huggingface', {
         method: 'POST',
         signal: controller.signal,
         headers: {
-          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          model: 'distilgpt2',
           inputs: `Scenario: ${scenario.title}\nPrompt: ${scenario.prompt}\nResponse:`,
           parameters: {
             max_length: 150,
@@ -56,23 +52,35 @@ const ScenarioSelection = () => {
 
       clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        throw new Error(`API request failed with status ${res.status}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `API request failed with status ${response.status}`);
       }
 
-      const data = await res.json();
-      const generatedResponse = data[0]?.generated_text || 'No response from AI';
-
-      navigate(`/scenario/${scenario.id}`, { state: { scenario } });
-
-      setResponse(generatedResponse);
+      const data = await response.json();
+      
+      // Continue with your existing logic
+      navigate(`/warmup`, { 
+        state: { 
+          scenario,
+          aiResponse: data[0]?.generated_text || 'No response from AI' 
+        } 
+      });
     } catch (error) {
       console.error('Error fetching response:', error);
       
-      navigate(`/scenario/${scenario.id}`, { 
+      // Handle AbortError specifically
+      if (error.name === 'AbortError') {
+        setError('Request timed out. Please try again.');
+      } else {
+        setError(error.message);
+      }
+      
+      // Still navigate but with error state
+      navigate(`/warmup`, { 
         state: { 
           scenario, 
-          response: `Error: ${error.message}` 
+          error: error.message 
         } 
       });
     } finally {
@@ -126,7 +134,30 @@ const ScenarioSelection = () => {
           />
         ))}
       </ScenarioGrid>
-      {loading ? <p>Loading...</p> : <p>{response}</p>}
+      {loading && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+          }}>
+            Loading...
+          </div>
+        </div>
+      )}
+      {error && <div className="error-message">Error: {error}</div>}
     </Container>
   );
 };

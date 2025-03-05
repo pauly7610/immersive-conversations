@@ -2,26 +2,32 @@ import React from 'react';
 import styled from 'styled-components';
 import { useTheme } from '../context/ThemeContext';
 
+const Card = styled.div`
+  background: white;
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: ${({ theme }) => theme.spacing[4]};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  transition: box-shadow ${({ theme }) => theme.transitions.default}, 
+              transform ${({ theme }) => theme.transitions.default};
+  
+  &:hover {
+    box-shadow: ${({ theme }) => theme.shadows.md};
+    transform: translateY(-2px);
+  }
+`;
+
 const Title = styled.h3`
-  font-size: 24px;
-  font-weight: 700;
-  color: #4b4b4b;
+  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.light.text};
   margin-bottom: ${({ theme }) => theme.spacing[2]};
   line-height: 1.3;
 `;
 
 const DurationText = styled.p`
-  font-size: 14px;
-  color: #777;
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  color: ${({ theme }) => theme.colors.light.mutedForeground};
   margin-bottom: ${({ theme }) => theme.spacing[4]};
-`;
-
-const Card = styled.div`
-  background: white;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: ${({ theme }) => theme.spacing[4]};
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.1);
 `;
 
 const StartButton = styled.button`

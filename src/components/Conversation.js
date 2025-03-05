@@ -1,18 +1,21 @@
 /* global webkitSpeechRecognition */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
+import { useConversation } from '../context/ConversationContext';
+import { useTheme } from '../context/ThemeContext';
+import { scenarios } from '../data/scenarios';
+import { getTransliteration, needsTransliteration } from '../utils/transliteration';
+import { fadeIn } from '../styles/StyledComponents';
 
 const ConversationContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 800px;
+  max-width: ${({ theme }) => theme.container.maxWidth.md};
   margin: 0 auto;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 16px;
+  padding: ${({ theme }) => theme.spacing[4]};
+  background-color: ${({ theme }) => theme.colors.light.background};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  box-shadow: ${({ theme }) => theme.shadows.md};
 `;
 
 const MessageArea = styled.div`
@@ -38,21 +41,28 @@ const InteractionArea = styled.div`
 const MessageList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: ${({ theme }) => theme.spacing[2]};
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: ${({ theme }) => theme.spacing[3]};
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
+  border: 1px solid ${({ theme }) => theme.colors.light.border};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
 `;
 
 const MessageBubble = styled.div`
   background-color: ${({ isUser, theme }) => 
-    isUser ? theme.colors.secondary.main : theme.colors.light.muted};
+    isUser ? theme.colors.primary.main : theme.colors.light.muted};
   color: ${({ isUser, theme }) => 
     isUser ? theme.colors.light.background : theme.colors.light.foreground};
-  border-radius: ${theme.borderRadius.lg};
-  padding: ${theme.spacing[3]};
-  margin: ${theme.spacing[2]} 0;
+  padding: ${({ theme }) => theme.spacing[3]};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  margin: ${({ theme }) => theme.spacing[2]} 0;
   max-width: 80%;
   align-self: ${({ isUser }) => isUser ? 'flex-end' : 'flex-start'};
-  box-shadow: ${theme.shadows.sm};
-  position: relative;
+  animation: ${fadeIn} 0.5s ease-in-out;
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
 `;
 
 const Avatar = styled.div`
@@ -67,34 +77,24 @@ const Avatar = styled.div`
 
 const SuggestedResponsesContainer = styled.div`
   display: flex;
-  gap: 16px;
   flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing[2]};
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
 `;
 
 const SuggestedResponseButton = styled.button`
-  background-color: ${({ theme }) => theme.colors.primary.main};
-  color: ${({ theme }) => theme.colors.light.background};
-  border: none;
-  padding: 12px;
-  border-radius: ${theme.borderRadius.default};
+  background-color: ${({ theme }) => theme.colors.light.background};
+  color: ${({ theme }) => theme.colors.light.foreground};
+  border: 1px solid ${({ theme }) => theme.colors.light.border};
+  padding: ${({ theme }) => theme.spacing[2]} ${({ theme }) => theme.spacing[3]};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
   cursor: pointer;
-  font-size: ${theme.typography.fontSize.base};
-  font-weight: ${theme.typography.fontWeight.bold};
-  transition: background-color ${theme.transitions.default};
-  flex-grow: 1;
-  min-width: 150px;
-
+  transition: all ${({ theme }) => theme.transitions.default};
+  
   &:hover {
-    background-color: ${({ theme }) => theme.colors.primary.hover};
-  }
-
-  &::after {
-    content: attr(data-translation);
-    display: block;
-    font-size: 0.8em;
-    color: ${({ theme }) => theme.colors.light.foreground};
-    margin-top: 4px;
-    font-weight: normal;
+    background-color: ${({ theme }) => theme.colors.primary.main + '10'};
+    border-color: ${({ theme }) => theme.colors.primary.main};
   }
 `;
 
@@ -137,6 +137,56 @@ const SecondaryButton = styled(SpeechButton)`
   }
 `;
 
+const TransliterationText = styled.div`
+  font-style: italic;
+  font-size: 0.9em;
+  margin-top: 5px;
+  color: ${({ theme }) => theme.colors.light.mutedForeground};
+  border-top: 1px dashed ${({ theme }) => theme.colors.light.border};
+  padding-top: 5px;
+`;
+
+const InputContainer = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing[2]};
+  margin-bottom: ${({ theme }) => theme.spacing[4]};
+`;
+
+const InputField = styled.input`
+  flex: 1;
+  padding: ${({ theme }) => theme.spacing[3]};
+  border: 1px solid ${({ theme }) => theme.colors.light.border};
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  
+  &:focus {
+    outline: 2px solid ${({ theme }) => theme.colors.primary.main};
+    border-color: transparent;
+  }
+`;
+
+const ActionButton = styled.button`
+  background-color: ${({ primary, theme }) => 
+    primary ? theme.colors.primary.main : theme.colors.secondary.main};
+  color: white;
+  padding: ${({ theme }) => theme.spacing[3]};
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.default};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: background-color ${({ theme }) => theme.transitions.default};
+  
+  &:hover {
+    background-color: ${({ primary, theme }) => 
+      primary ? theme.colors.primary.hover : theme.colors.secondary.hover};
+  }
+  
+  &:disabled {
+    background-color: ${({ theme }) => theme.colors.light.muted};
+    cursor: not-allowed;
+  }
+`;
+
 const welcomeMessages = {
   spanish: '¡Hola! Bienvenido a la práctica de conversación.',
   french: 'Bonjour! Bienvenue à la pratique de conversation.',
@@ -150,186 +200,380 @@ const welcomeMessages = {
   english: 'Hello! Welcome to conversation practice.'
 };
 
-const getInitialResponses = (language, scenario) => {
+// Comprehensive initial responses for all languages and scenario types
+const getInitialResponses = (language, scenarioType) => {
+  // Convert to lowercase for consistency
+  const lang = language?.toLowerCase() || 'english';
+  const type = scenarioType?.toLowerCase() || 'general';
+  
+  // Complete mapping of initial responses for all languages and scenarios
   const responseMap = {
     spanish: {
       food: [
-        { text: '¿Cuál es el especial del día?', translation: "What's today's special?" },
-        { text: 'Me gustaría ordenar...', translation: 'I would like to order...' },
-        { text: '¿Qué me recomienda?', translation: 'What do you recommend?' }
+        "Me gustaría ordenar paella, por favor.",
+        "¿Cuál es el especial de hoy?",
+        "¿Me puede traer la cuenta, por favor?"
       ],
-      airport: [
-        { text: '¿Dónde está el mostrador de facturación?', translation: 'Where is the check-in counter?' },
-        { text: '¿Cuánto tiempo falta para el embarque?', translation: 'How long until boarding?' }
+      travel: [
+        "¿Dónde está el aeropuerto?",
+        "Necesito un taxi, por favor.",
+        "¿Cuánto cuesta un boleto a Madrid?"
       ],
-      hotel: [
-        { text: '¿Puedo hacer el check-in temprano?', translation: 'Can I check in early?' },
-        { text: '¿Hay servicio de habitaciones?', translation: 'Is there room service?' }
+      work: [
+        "Tengo una reunión a las 10.",
+        "¿Podemos discutir el proyecto?",
+        "Necesito enviar un correo electrónico."
+      ],
+      social: [
+        "¿Cómo te llamas?",
+        "Me gusta tu camisa.",
+        "¿De dónde eres?"
       ]
     },
     french: {
-      interview: [
-        { text: 'Pourquoi voulez-vous ce poste?', translation: 'Why do you want this position?' },
-        { text: 'Parlez-moi de votre expérience.', translation: 'Tell me about your experience.' }
-      ],
-      party: [
-        { text: 'Joyeux anniversaire!', translation: 'Happy birthday!' },
-        { text: 'Quelle musique aimez-vous?', translation: 'What music do you like?' }
+      food: [
+        "Je voudrais commander le plat du jour.",
+        "Quelle est la spécialité du chef?",
+        "L'addition, s'il vous plaît."
       ],
       travel: [
-        { text: 'Où est la gare?', translation: 'Where is the train station?' },
-        { text: 'Pouvez-vous me recommander un restaurant?', translation: 'Can you recommend a restaurant?' }
+        "Où est la gare?",
+        "Je cherche un hôtel.",
+        "Combien coûte un billet pour Paris?"
+      ],
+      work: [
+        "J'ai une réunion à 14h.",
+        "Pouvons-nous discuter du projet?",
+        "Je dois envoyer un email."
+      ],
+      social: [
+        "Comment vous appelez-vous?",
+        "J'aime votre chemise.",
+        "D'où venez-vous?"
       ]
     },
     german: {
-      shopping: [
-        { text: 'Wie viel kostet das?', translation: 'How much does this cost?' },
-        { text: 'Haben Sie das in einer anderen Größe?', translation: 'Do you have this in another size?' }
+      food: [
+        "Ich möchte Schnitzel bestellen, bitte.",
+        "Was ist das Tagesgericht?",
+        "Die Rechnung, bitte."
       ],
-      meeting: [
-        { text: 'Können wir das Meeting verschieben?', translation: 'Can we reschedule the meeting?' },
-        { text: 'Was ist die Agenda für heute?', translation: 'What is the agenda for today?' }
+      travel: [
+        "Wo ist der Bahnhof?",
+        "Ich suche ein Hotel.",
+        "Wie viel kostet eine Fahrkarte nach Berlin?"
+      ],
+      work: [
+        "Ich habe um 11 Uhr ein Meeting.",
+        "Können wir über das Projekt sprechen?",
+        "Ich muss eine E-Mail senden."
+      ],
+      social: [
+        "Wie heißen Sie?",
+        "Ich mag dein Hemd.",
+        "Woher kommen Sie?"
       ]
     },
     italian: {
-      restaurant: [
-        { text: 'Posso vedere il menu?', translation: 'Can I see the menu?' },
-        { text: 'Qual è il piatto del giorno?', translation: 'What is the dish of the day?' }
+      food: [
+        "Vorrei ordinare la pasta, per favore.",
+        "Qual è il piatto del giorno?",
+        "Il conto, per favore."
       ],
-      sightseeing: [
-        { text: 'Dove si trova il museo?', translation: 'Where is the museum?' },
-        { text: 'Quali sono le attrazioni principali?', translation: 'What are the main attractions?' }
+      travel: [
+        "Dov'è la stazione?",
+        "Sto cercando un albergo.",
+        "Quanto costa un biglietto per Roma?"
+      ],
+      work: [
+        "Ho una riunione alle 10.",
+        "Possiamo discutere del progetto?",
+        "Devo inviare un'email."
+      ],
+      social: [
+        "Come ti chiami?",
+        "Mi piace la tua camicia.",
+        "Di dove sei?"
       ]
     },
     portuguese: {
-      business: [
-        { text: 'Qual é o seu papel na empresa?', translation: 'What is your role in the company?' },
-        { text: 'Podemos discutir o contrato?', translation: 'Can we discuss the contract?' }
+      food: [
+        "Eu gostaria de pedir bacalhau, por favor.",
+        "Qual é o prato do dia?",
+        "A conta, por favor."
       ],
-      vacation: [
-        { text: 'Onde fica a praia mais próxima?', translation: 'Where is the nearest beach?' },
-        { text: 'Quais atividades você recomenda?', translation: 'What activities do you recommend?' }
+      travel: [
+        "Onde fica a estação?",
+        "Estou procurando um hotel.",
+        "Quanto custa uma passagem para Lisboa?"
+      ],
+      work: [
+        "Tenho uma reunião às 10h.",
+        "Podemos discutir o projeto?",
+        "Preciso enviar um e-mail."
+      ],
+      social: [
+        "Como você se chama?",
+        "Gosto da sua camisa.",
+        "De onde você é?"
       ]
     },
     japanese: {
-      work: [
-        { text: 'このプロジェクトの締め切りはいつですか？', translation: 'When is the deadline for this project?', pronunciation: 'Kono pu-ro-je-ku-to no shi-me-ki-ri wa i-tsu de-su ka?' },
-        { text: '会議は何時に始まりますか？', translation: 'What time does the meeting start?', pronunciation: 'Kai-gi wa nan-ji ni ha-ji-ma-ri-ma-su ka?' }
+      food: [
+        "寿司を注文したいです。",
+        "今日のおすすめは何ですか？",
+        "お会計をお願いします。"
       ],
       travel: [
-        { text: '駅はどこですか？', translation: 'Where is the station?', pronunciation: 'E-ki wa do-ko de-su ka?' },
-        { text: 'おすすめの観光地はありますか？', translation: 'Do you have any sightseeing recommendations?', pronunciation: 'O-su-su-me no kan-ko-u-chi wa a-ri-ma-su ka?' }
+        "駅はどこですか？",
+        "ホテルを探しています。",
+        "東京までの切符はいくらですか？"
+      ],
+      work: [
+        "10時に会議があります。",
+        "プロジェクトについて話し合えますか？",
+        "メールを送る必要があります。"
+      ],
+      social: [
+        "お名前は何ですか？",
+        "そのシャツが好きです。",
+        "どこから来ましたか？"
       ]
     },
     korean: {
-      dining: [
-        { text: '메뉴를 볼 수 있을까요?', translation: 'Can I see the menu?', pronunciation: 'Me-nyu-reul bol su i-sseul-kka-yo?' },
-        { text: '오늘의 추천 요리는 무엇인가요?', translation: 'What is today\'s special?', pronunciation: 'O-neul-ui chu-cheon yo-ri-neun mu-eot-in-ga-yo?' }
+      food: [
+        "비빔밥을 주문하고 싶습니다.",
+        "오늘의 특선 요리는 무엇인가요?",
+        "계산서 부탁드립니다."
       ],
-      shopping: [
-        { text: '이것은 얼마입니까?', translation: 'How much is this?', pronunciation: 'I-geot-eun eol-ma-im-ni-kka?' },
-        { text: '다른 색상이 있나요?', translation: 'Do you have this in another color?', pronunciation: 'Da-reun saek-sang-i it-na-yo?' }
+      travel: [
+        "역이 어디에 있나요?",
+        "호텔을 찾고 있습니다.",
+        "서울까지 티켓은 얼마인가요?"
+      ],
+      work: [
+        "10시에 회의가 있습니다.",
+        "프로젝트에 대해 논의할 수 있을까요?",
+        "이메일을 보내야 합니다."
+      ],
+      social: [
+        "이름이 뭐예요?",
+        "셔츠가 마음에 들어요.",
+        "어디에서 왔어요?"
       ]
     },
     russian: {
-      hotel: [
-        { text: 'Можно ли заказать завтрак в номер?', translation: 'Can I order breakfast to my room?', pronunciation: 'Mozh-no li za-ka-zat zav-trak v no-mer?' },
-        { text: 'Какой у вас Wi-Fi пароль?', translation: 'What is your Wi-Fi password?', pronunciation: 'Ka-koy u vas Wi-Fi pa-rol?' }
+      food: [
+        "Я хотел бы заказать борщ, пожалуйста.",
+        "Какое у вас фирменное блюдо?",
+        "Счет, пожалуйста."
       ],
-      transport: [
-        { text: 'Где находится ближайшая автобусная остановка?', translation: 'Where is the nearest bus stop?', pronunciation: 'Gde na-kho-dits-ya bli-zhai-sha-ya av-to-bus-na-ya os-ta-nov-ka?' },
-        { text: 'Как добраться до аэропорта?', translation: 'How do I get to the airport?', pronunciation: 'Kak do-brat-sya do ae-ro-por-ta?' }
+      travel: [
+        "Где находится вокзал?",
+        "Я ищу гостиницу.",
+        "Сколько стоит билет до Москвы?"
+      ],
+      work: [
+        "У меня встреча в 10 часов.",
+        "Можем ли мы обсудить проект?",
+        "Мне нужно отправить электронное письмо."
+      ],
+      social: [
+        "Как вас зовут?",
+        "Мне нравится ваша рубашка.",
+        "Откуда вы?"
       ]
     },
     arabic: {
-      market: [
-        { text: 'كم سعر هذا؟', translation: 'How much is this?', pronunciation: 'Kam si\'r ha-dha?' },
-        { text: 'هل لديك حجم أكبر؟', translation: 'Do you have a larger size?', pronunciation: 'Hal la-day-ka hajm ak-bar?' }
+      food: [
+        "أود أن أطلب الكسكس من فضلك.",
+        "ما هو طبق اليوم؟",
+        "الحساب من فضلك."
       ],
-      education: [
-        { text: 'ما هي المواد التي تدرسها؟', translation: 'What subjects do you teach?', pronunciation: 'Ma hi-ya al-ma-wad al-la-ti ta-dru-su-ha?' },
-        { text: 'متى تبدأ الحصة؟', translation: 'When does the class start?', pronunciation: 'Ma-ta tab-da al-his-sa?' }
+      travel: [
+        "أين المحطة؟",
+        "أبحث عن فندق.",
+        "كم تكلفة تذكرة إلى القاهرة؟"
+      ],
+      work: [
+        "لدي اجتماع في الساعة 10.",
+        "هل يمكننا مناقشة المشروع؟",
+        "أحتاج إلى إرسال بريد إلكتروني."
+      ],
+      social: [
+        "ما هو اسمك؟",
+        "أحب قميصك.",
+        "من أين أنت؟"
       ]
     },
     english: {
-      general: [
-        { text: 'How are you today?', translation: '' },
-        { text: 'What\'s your favorite hobby?', translation: '' }
+      food: [
+        "I'd like to order the special, please.",
+        "What do you recommend?",
+        "Could I see the dessert menu?"
       ],
       travel: [
-        { text: 'Where is the nearest train station?', translation: '' },
-        { text: 'Can you recommend a good restaurant?', translation: '' }
+        "Where is the nearest subway station?",
+        "I need directions to the museum.",
+        "How much is a taxi to the airport?"
+      ],
+      work: [
+        "I have a meeting at 10 AM.",
+        "Can we discuss the project timeline?",
+        "I need to send an important email."
+      ],
+      social: [
+        "What's your name?",
+        "I like your shirt.",
+        "Where are you from?"
       ]
     }
   };
-
-  return responseMap[language]?.[scenario] || [];
+  
+  // Default responses if specific ones aren't available
+  const defaultResponses = [
+    "I'm not sure how to respond.",
+    "Could you help me with this conversation?",
+    "Let's continue the conversation."
+  ];
+  
+  // Try to get language-specific and scenario-specific responses
+  // Fall back to defaults if not available
+  return responseMap[lang]?.[type] || defaultResponses;
 };
 
-const Conversation = ({ scenario }) => {
+const Conversation = ({ scenarioId, scenario: propScenario, onConversationEnd }) => {
+  const { selectedScenario } = useConversation();
     const navigate = useNavigate();
-
+  const [scenario, setScenario] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [messageIds, setMessageIds] = useState(new Set());
+  const [inputText, setInputText] = useState('');
     const [suggestedResponses, setSuggestedResponses] = useState([]);
     const [isListening, setIsListening] = useState(false);
-    const messageListRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const messagesEndRef = useRef(null);
+  const { theme } = useTheme();
 
-    const scenarioLanguage = scenario.language || 'english';
-    const scenarioType = scenario.type || 'general';
+  // Load the scenario
+  useEffect(() => {
+    console.log('Conversation component mounted with props:', { scenarioId, propScenario });
+    
+    try {
+      let scenarioData = null;
+      
+      if (propScenario) {
+        scenarioData = propScenario;
+      } else if (scenarioId) {
+        const foundScenario = scenarios.find(s => s.id === parseInt(scenarioId));
+        if (!foundScenario) {
+          throw new Error(`Scenario with ID ${scenarioId} not found`);
+        }
+        scenarioData = foundScenario;
+      } else if (selectedScenario) {
+        scenarioData = selectedScenario;
+      } else {
+        throw new Error("No scenario provided");
+      }
+      
+      setScenario(scenarioData);
+      console.log('Scenario loaded successfully:', scenarioData);
+      
+      // Initialize with welcome message and AI first message
+      const language = scenarioData.language?.toLowerCase() || 'english';
+      const welcomeMessage = welcomeMessages[language] || welcomeMessages.english;
+      
+      // Get initial AI message based on scenario type
+      let initialAIMessage = '';
+      
+      switch (scenarioData.type) {
+        case 'food':
+          initialAIMessage = language === 'spanish' 
+            ? '¡Hola! ¿Qué le gustaría ordenar hoy?' 
+            : 'Hello! What would you like to order today?';
+          break;
+        case 'travel':
+          initialAIMessage = language === 'spanish'
+            ? '¡Hola! ¿En qué puedo ayudarle con su viaje?'
+            : 'Hello! How can I help you with your travel?';
+          break;
+        case 'work':
+        case 'job':
+          initialAIMessage = language === 'spanish'
+            ? 'Buenos días. Bienvenido a la entrevista.'
+            : 'Good morning. Welcome to the interview.';
+          break;
+        case 'social':
+          initialAIMessage = language === 'spanish'
+            ? '¡Hola! Es un placer conocerte.'
+            : 'Hello! It\'s nice to meet you.';
+          break;
+        default:
+          initialAIMessage = language === 'spanish'
+            ? '¡Hola! ¿Cómo puedo ayudarte hoy?'
+            : 'Hello! How can I help you today?';
+      }
+      
+      setMessages([
+        { text: welcomeMessage, isUser: false, isWelcome: true },
+        { text: initialAIMessage, isUser: false }
+      ]);
+      
+      // Load initial suggested responses
+      const initialResponses = getInitialResponses(language, scenarioData.type);
+      setSuggestedResponses(initialResponses);
+      
+    } catch (err) {
+      console.error('Error loading scenario:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [propScenario, scenarioId, selectedScenario]);
 
-    // Speech Recognition and Synthesis setup
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Add a new message to the conversation
+    const addMessage = (text, isUser) => {
+            setMessages(prev => [...prev, { text, isUser }]);
+    
+    // If it's a user message, generate AI response
+    if (isUser) {
+      generateAIResponse(text);
+    }
+  };
+
+  // Handle speech recognition
+  const startListening = () => {
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      alert('Speech recognition is not supported in your browser. Try Chrome or Edge.');
+      return;
+    }
+    
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const SpeechSynthesis = window.speechSynthesis;
     const recognition = new SpeechRecognition();
+    
+    recognition.lang = getLanguageCode(scenario.language);
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = scenario.language === 'spanish' ? 'es-ES' : 
-                       scenario.language === 'french' ? 'fr-FR' :
-                       scenario.language === 'german' ? 'de-DE' :
-                       scenario.language === 'italian' ? 'it-IT' :
-                       scenario.language === 'portuguese' ? 'pt-PT' :
-                       scenario.language === 'japanese' ? 'ja-JP' :
-                       scenario.language === 'korean' ? 'ko-KR' :
-                       scenario.language === 'russian' ? 'ru-RU' :
-                       scenario.language === 'arabic' ? 'ar-AR' :
-                       'en-US';
-
-    const addMessage = (text, isUser) => {
-        const messageId = `${text}-${isUser}`;
-        if (!messageIds.has(messageId)) {
-            setMessages(prev => [...prev, { text, isUser }]);
-            setMessageIds(prev => new Set(prev).add(messageId));
-        }
+    
+    recognition.onstart = () => {
+      setIsListening(true);
     };
-
-    useEffect(() => {
-        setMessages([]);
-        setMessageIds(new Set());
-        const initialMessage = welcomeMessages[scenarioLanguage] || welcomeMessages.english;
-        const responses = getInitialResponses(scenarioLanguage, scenarioType);
-        addMessage(initialMessage, false);
-        setSuggestedResponses(responses);
-    }, [scenario, addMessage, scenarioLanguage, scenarioType]);
-
-    useEffect(() => {
-        if (messageListRef.current) {
-            messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
-        }
-    }, [messages, suggestedResponses]);
-
-    const speakMessage = (text) => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = recognition.lang;
-        SpeechSynthesis.speak(utterance);
-    };
-
-    const startListening = () => {
-        setIsListening(true);
+    
         recognition.onresult = (event) => {
-            const userSpeech = event.results[0][0].transcript;
-            addMessage(userSpeech, true);
-            generateAIResponse(userSpeech);
+      const transcript = event.results[0][0].transcript;
+      setInputText(transcript);
+      addMessage(transcript, true);
+    };
+    
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event.error);
+      setIsListening(false);
         };
 
         recognition.onend = () => {
@@ -339,105 +583,358 @@ const Conversation = ({ scenario }) => {
         recognition.start();
     };
 
+  // Handle suggested response click
     const handleSuggestedResponse = (response) => {
-        addMessage(response.text, true);
-        generateAIResponse(response.text);
+    addMessage(response, true);
     };
 
+  // Generate AI response based on conversation context
     const generateAIResponse = async (userMessage) => {
-        try {
-            const apiKey = process.env.REACT_APP_HUGGING_FACE_API_KEY;
-            const response = await fetch('https://api-inference.huggingface.co/models/facebook/bart-large', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    inputs: `Continue the conversation in ${scenario.language} for the scenario: ${scenario.title}.
-                    User's Last Message: ${userMessage}
-                    Provide 3 possible user responses in ${scenario.language}.`,
-                    parameters: {
-                        max_length: 250,
-                        temperature: 0.7,
-                    }
-                })
-            });
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/huggingface', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'distilgpt2',
+          inputs: userMessage,
+          parameters: {
+            max_length: 150,
+            temperature: 0.7,
+          },
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const aiResponse = data[0]?.generated_text || 'I\'m not sure how to respond to that.';
+      
+      // Process the response
+      addMessage(aiResponse, false);
+      
+      // Generate suggested responses based on the AI response
+      await generateSuggestedResponses(aiResponse);
+    } catch (error) {
+      console.error('Error generating response:', error);
+      setError(error.message);
+      addMessage("Sorry, I couldn't generate a response. Please try again.", false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            const data = await response.json();
-            const fullResponse = data[0]?.generated_text || 
-                'Entiendo. ¿Podrías contarme más sobre eso?';
-            
-            // Split response into AI message and suggested responses
-            const responseParts = fullResponse.split('\n');
-            const aiMessage = responseParts[0].trim();
-            const newSuggestedResponses = responseParts
-                .slice(1, 4)
-                .map(option => option.replace(/^\d+\.\s*/, '').trim())
-                .filter(option => option);
-
-            addMessage(aiMessage, false);
-            setSuggestedResponses(newSuggestedResponses.map(text => ({ text, translation: '' })));
-            speakMessage(aiMessage);
-        } catch (error) {
-            console.error('Error generating AI response:', error);
+  // Generate new suggested responses based on conversation context
+  const generateSuggestedResponses = async (aiResponse) => {
+    try {
+      const response = await fetch('/api/huggingface', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'distilgpt2',
+          inputs: aiResponse,
+          parameters: {
+            max_length: 200,
+            temperature: 0.7,
+          },
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const generatedText = data[0]?.generated_text || '';
+      
+      // Try to extract JSON array from the response
+      try {
+        // Look for anything that looks like a JSON array in the response
+        const jsonMatch = generatedText.match(/\[.*\]/s);
+        
+        if (jsonMatch) {
+          const jsonStr = jsonMatch[0];
+          const parsedResponses = JSON.parse(jsonStr);
+          
+          if (Array.isArray(parsedResponses) && parsedResponses.length > 0) {
+            setSuggestedResponses(parsedResponses);
+            return;
+          }
         }
-    };
+        
+        // If we couldn't parse JSON, extract lines that look like responses
+        const lines = generatedText.split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0 && !line.startsWith('[') && !line.startsWith(']'))
+          .map(line => line.replace(/^["']|["']$/g, '').replace(/^[0-9]+[.:]/, '').trim())
+          .filter(line => line.length > 0);
+        
+        if (lines.length > 0) {
+          setSuggestedResponses(lines.slice(0, 3));
+          return;
+        }
+      } catch (jsonError) {
+        console.error('Error parsing suggested responses:', jsonError);
+      }
+      
+      // Fall back to static responses if parsing fails
+      const language = scenario.language?.toLowerCase() || 'english';
+      const staticResponses = getInitialResponses(language, scenario.type);
+      setSuggestedResponses(staticResponses);
+      
+    } catch (error) {
+      console.error('Error generating suggested responses:', error);
+      
+      // Fall back to static responses
+      const language = scenario.language?.toLowerCase() || 'english';
+      const staticResponses = getInitialResponses(language, scenario.type);
+      setSuggestedResponses(staticResponses);
+    }
+  };
 
+  // Handle form submission
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    if (inputText.trim() === '') return;
+    
+    addMessage(inputText, true);
+    setInputText('');
+    generateAIResponse(inputText);
+  }, [inputText, addMessage, generateAIResponse]);
+
+  // Handle end conversation
     const handleEndConversation = () => {
-        navigate('/review', { 
-            state: { 
-                scenario, 
-                messages 
-            } 
-        });
-    };
+    if (onConversationEnd) {
+      onConversationEnd(messages);
+    }
+    navigate('/review', { state: { transcript: messages } });
+  };
 
-    if (!scenario) {
-        return <div>No scenario selected</div>;
+  // Memoize expensive computations and callbacks
+  const getLanguageCode = useCallback((language) => {
+    const languageMap = {
+      'Spanish': 'es-ES',
+      'French': 'fr-FR',
+      'German': 'de-DE',
+      'Italian': 'it-IT',
+      'Portuguese': 'pt-PT',
+      'Japanese': 'ja-JP',
+      'Korean': 'ko-KR',
+      'Russian': 'ru-RU',
+      'Arabic': 'ar-SA',
+      'English': 'en-US'
+    };
+    
+    return languageMap[language] || 'en-US';
+  }, []);
+
+  // Use React.memo for child components that don't need to re-render often
+  const SuggestedResponse = React.memo(({ text, onClick }) => (
+    <button 
+      onClick={() => onClick(text)}
+      className="suggested-response"
+    >
+      {text}
+    </button>
+  ));
+
+  // Use useMemo for expensive renders
+  const renderedMessages = useMemo(() => {
+    return messages.map((message, index) => renderMessage(message, index));
+  }, [messages, renderMessage]);
+
+  // Render a message with transliteration if needed
+  const renderMessage = (message) => {
+    const showTransliteration = !message.isUser && 
+      needsTransliteration(scenario.language) && 
+      message.text.trim() !== '';
+    
+    const transliteration = showTransliteration 
+      ? getTransliteration(message.text, scenario.language)
+      : '';
+    
+    return (
+      <div 
+        style={{
+          backgroundColor: message.isUser 
+            ? theme.colors.primary.main 
+            : message.isWelcome 
+              ? theme.colors.light.muted 
+              : theme.colors.primary.main,
+          color: message.isUser || message.isWelcome ? 'black' : 'white',
+          padding: theme.spacing[2],
+          borderRadius: theme.borderRadius.default,
+          marginBottom: theme.spacing[2],
+          maxWidth: '80%',
+          marginLeft: message.isUser ? 'auto' : '0',
+          marginRight: message.isUser ? '0' : 'auto'
+        }}
+      >
+        <div>{message.text}</div>
+        
+        {showTransliteration && transliteration && (
+          <TransliterationText theme={theme}>
+            How to pronounce: {transliteration}
+          </TransliterationText>
+        )}
+      </div>
+    );
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px' }}>
+        <h2>Loading conversation...</h2>
+        <p>Preparing your language practice session</p>
+      </div>
+    );
+  }
+  
+  // Show error state
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px' }}>
+        <h2>Error loading conversation</h2>
+        <p>{error}</p>
+        <button 
+          onClick={() => navigate('/')}
+          style={{
+            backgroundColor: theme.colors.primary.main,
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            marginTop: '20px'
+          }}
+        >
+          Return to Scenarios
+        </button>
+      </div>
+    );
     }
 
     return (
-        <ConversationContainer theme={theme}>
-            <MessageArea>
+    <div>
                 <h2>{scenario.title}</h2>
-                <p>{scenario.prompt}</p>
-                <MessageList ref={messageListRef}>
-                    {messages.map((message, index) => (
-                        <MessageBubble key={index} isUser={message.isUser}>
-                            <Avatar isUser={message.isUser} />
-                            {message.text}
-                        </MessageBubble>
-                    ))}
-                </MessageList>
-            </MessageArea>
-            
-            <InteractionArea>
-                <SuggestedResponsesContainer>
-                    {suggestedResponses.map((response, index) => (
-                        <SuggestedResponseButton 
-                            key={index} 
-                            onClick={() => handleSuggestedResponse(response)}
-                            data-translation={response.translation}
-                        >
-                            {response.text}
-                        </SuggestedResponseButton>
-                    ))}
-                </SuggestedResponsesContainer>
-
-                <Footer>
-                    <PrimaryButton 
+      <p>{scenario.description}</p>
+      
+      {/* Messages container */}
+      <div 
+        style={{ 
+          height: '400px', 
+          overflowY: 'auto',
+          border: `1px solid ${theme.colors.light.border}`,
+          borderRadius: theme.borderRadius.default,
+          padding: theme.spacing[3],
+          marginBottom: theme.spacing[4]
+        }}
+      >
+        {renderedMessages}
+        <div ref={messagesEndRef} />
+        
+        {apiLoading && (
+          <div style={{ textAlign: 'center', padding: '10px' }}>
+            <p>AI is thinking...</p>
+          </div>
+        )}
+      </div>
+      
+      {/* Input form */}
+      <form onSubmit={handleSubmit} style={{ marginBottom: theme.spacing[4] }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input
+            type="text"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder={`Type your response in ${scenario.language}...`}
+            style={{ 
+              flex: 1,
+              padding: '10px',
+              borderRadius: theme.borderRadius.default,
+              border: `1px solid ${theme.colors.light.border}`
+            }}
+          />
+          <button
+            type="submit"
+            disabled={!inputText.trim() || apiLoading}
+            style={{
+              backgroundColor: theme.colors.primary.main,
+              color: 'white',
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: theme.borderRadius.default,
+              cursor: inputText.trim() && !apiLoading ? 'pointer' : 'not-allowed',
+              opacity: inputText.trim() && !apiLoading ? 1 : 0.7
+            }}
+          >
+            Send
+          </button>
+          <button
+            type="button"
                         onClick={startListening} 
-                        disabled={isListening}
-                    >
-                        {isListening ? 'Listening...' : 'Speak Freely'}
-                    </PrimaryButton>
-                    <SecondaryButton onClick={handleEndConversation}>
+            disabled={isListening || apiLoading}
+            style={{
+              backgroundColor: isListening ? 'red' : theme.colors.secondary.main,
+              color: 'white',
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: theme.borderRadius.default,
+              cursor: !isListening && !apiLoading ? 'pointer' : 'not-allowed',
+              opacity: !isListening && !apiLoading ? 1 : 0.7
+            }}
+          >
+            {isListening ? 'Listening...' : 'Speak'}
+          </button>
+        </div>
+      </form>
+      
+      {/* Suggested responses with transliteration */}
+      <div>
+        <h3>Suggested Responses:</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: theme.spacing[4] }}>
+          {suggestedResponses.map((response, index) => {
+            const showTransliteration = needsTransliteration(scenario.language);
+            const transliteration = showTransliteration 
+              ? getTransliteration(response, scenario.language)
+              : '';
+              
+            return (
+              <SuggestedResponse
+                key={index}
+                text={response}
+                onClick={handleSuggestedResponse}
+              />
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* End conversation button */}
+      <button
+        onClick={handleEndConversation}
+        style={{
+          backgroundColor: theme.colors.accent.red,
+          color: 'white',
+          padding: '10px 20px',
+          border: 'none',
+          borderRadius: theme.borderRadius.default,
+          cursor: 'pointer'
+        }}
+      >
                         End Conversation
-                    </SecondaryButton>
-                </Footer>
-            </InteractionArea>
-        </ConversationContainer>
+      </button>
+    </div>
     );
 };
 

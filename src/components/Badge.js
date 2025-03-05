@@ -11,11 +11,6 @@ const BadgeContainer = styled.div`
   align-items: center;
 `;
 
-const Icon = styled.img`
-  margin-right: ${({ theme }) => theme.spacing[2]};
-  width: 30px;
-`;
-
 const Title = styled.h3`
   color: ${({ theme }) => theme.colors.primary.main};
   margin: 0;
@@ -26,7 +21,7 @@ const Badge = ({ title, description, icon }) => {
 
   return (
     <BadgeContainer theme={theme}>
-      {icon && <Icon src={icon} alt={`${title} icon`} theme={theme} />}
+      {icon && <img src={icon} alt={`${title} icon`} style={{ marginRight: theme.spacing[2] }} />}
       <div>
         <Title theme={theme}>{title}</Title>
         <p>{description}</p>
