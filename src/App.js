@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, Component } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useTheme } from './context/ThemeContext';
 import { ThemeProvider } from 'styled-components';
 import { GlobalStyle } from './styles/GlobalStyle';
@@ -43,11 +43,16 @@ class ErrorBoundary extends Component {
 const App = () => {
     const { theme } = useTheme();
 
+    // This correctly sets up the Vercel API route in production
+    const apiUrl = process.env.NODE_ENV === 'production' 
+      ? '/api/huggingface' 
+      : 'http://localhost:3000/api/huggingface';
+
     return (
         <ThemeProvider theme={theme}>
             <GlobalStyle />
             <ErrorBoundary>
-                <ConversationProvider>
+                <ConversationProvider apiUrl={apiUrl}>
                     <Router>
                         <NavigationBar />
                         <Container>

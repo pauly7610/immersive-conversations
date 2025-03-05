@@ -5,6 +5,7 @@ import { Container, CategoryRibbon, RibbonButton } from '../styles/StyledCompone
 import styled from 'styled-components';
 import { useTheme } from '../context/ThemeContext';
 import ScenarioCard from './ScenarioCard';
+import { useConversation } from '../context/ConversationContext';
 
 const ScenarioGrid = styled.div`
   display: grid;
@@ -19,6 +20,7 @@ const ScenarioSelection = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { apiUrl } = useConversation();
 
   const filteredScenarios = selectedCategory === 'All'
     ? scenarios
@@ -29,11 +31,10 @@ const ScenarioSelection = () => {
     setError(null);
     
     try {
-      // Call your Vercel API route instead of the API directly
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch('/api/huggingface', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         signal: controller.signal,
         headers: {
@@ -59,7 +60,6 @@ const ScenarioSelection = () => {
 
       const data = await response.json();
       
-      // Continue with your existing logic
       navigate(`/warmup`, { 
         state: { 
           scenario,
@@ -69,14 +69,12 @@ const ScenarioSelection = () => {
     } catch (error) {
       console.error('Error fetching response:', error);
       
-      // Handle AbortError specifically
       if (error.name === 'AbortError') {
         setError('Request timed out. Please try again.');
       } else {
         setError(error.message);
       }
       
-      // Still navigate but with error state
       navigate(`/warmup`, { 
         state: { 
           scenario, 

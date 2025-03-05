@@ -4,7 +4,7 @@ const ConversationContext = createContext();
 
 export const useConversation = () => useContext(ConversationContext);
 
-export const ConversationProvider = ({ children }) => {
+export const ConversationProvider = ({ children, apiUrl }) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState(null);
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [conversationTranscript, setConversationTranscript] = useState([]);
@@ -39,6 +39,7 @@ export const ConversationProvider = ({ children }) => {
         selectedScenario,
         conversationTranscript,
         currentScreen,
+        apiUrl,
         handleScenarioSelect,
         handleWarmUpComplete,
         handleConversationEnd,

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useTheme } from '../context/ThemeContext';
+import { useConversation } from '../context/ConversationContext';
 
 // Check for browser support of the Web Speech API
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -58,45 +59,51 @@ const Response = styled.p`
 
 const VoiceRecognitionComponent = () => {
   const { theme } = useTheme();
+  const { apiUrl } = useConversation(); // Get apiUrl from context
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
+  const [recognition, setRecognition] = useState(null);
 
-  if (!SpeechRecognition) {
-    return <p>Your browser does not support speech recognition.</p>;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = 'en-US';
+  // Initialize speech recognition on component mount
+  useEffect(() => {
+    if (SpeechRecognition) {
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+      
+      recognitionInstance.onresult = (event) => {
+        const speechToText = event.results[0][0].transcript;
+        setTranscript(speechToText);
+        processInput(speechToText);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+    
+    // Cleanup function
+    return () => {
+      if (recognition) {
+        recognition.abort();
+      }
+    };
+  }, []);
 
   const startRecognition = () => {
-    recognition.start();
-    recognition.onresult = (event) => {
-      const speechToText = event.results[0][0].transcript;
-      setTranscript(speechToText);
-      processInput(speechToText);
-    };
+    if (recognition) {
+      recognition.start();
+    }
   };
 
   const processInput = async (input) => {
-    const apiKey = process.env.REACT_APP_HUGGING_FACE_API_KEY;
-    
-    if (!apiKey) {
-      setResponse('Error: API key is missing. Please check your environment configuration.');
-      return;
-    }
-    
-    const model = 'distilgpt2';
-
     try {
-      const res = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          model: 'distilgpt2',
           inputs: input,
           parameters: {
             max_length: 512,
@@ -105,6 +112,10 @@ const VoiceRecognitionComponent = () => {
         }),
       });
 
+      if (!res.ok) {
+        throw new Error(`API request failed with status ${res.status}`);
+      }
+
       const data = await res.json();
       setResponse(data[0]?.generated_text || 'No response');
     } catch (error) {
@@ -112,6 +123,10 @@ const VoiceRecognitionComponent = () => {
       setResponse(`Error: ${error.message}`);
     }
   };
+
+  if (!recognition) {
+    return <p>Your browser does not support speech recognition.</p>;
+  }
 
   return (
     <APIContainer theme={theme}>

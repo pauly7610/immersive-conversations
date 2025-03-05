@@ -1,18 +1,42 @@
 const CACHE_NAME = 'language-learning-app-cache-v1';
-const BASE_URL = '/Immersive-Conversations'; // GitHub Pages base path
 const urlsToCache = [
-  `${BASE_URL}/`,
-  `${BASE_URL}/index.html`,
-  `${BASE_URL}/static/js/main.js`,
-  `${BASE_URL}/static/js/chunk.js`,
-  `${BASE_URL}/static/css/main.css`,
+  '/',
+  '/index.html',
+  '/static/css/main.*.css',
+  '/static/js/main.*.js',
+  '/static/js/bundle.js',
+  '/static/js/vendors~main.chunk.js',
+  '/static/js/main.chunk.js',
   // Add other assets you want to cache
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
+      // Use a more flexible approach to cache files
+      return cache.addAll(
+        urlsToCache.filter(url => !url.includes('*'))
+      ).then(() => {
+        // For wildcard URLs, fetch them individually
+        return Promise.all(
+          urlsToCache
+            .filter(url => url.includes('*'))
+            .map(pattern => {
+              const basePattern = pattern.replace(/\*\.[^.]+$/, '');
+              return fetch('/')
+                .then(response => response.text())
+                .then(html => {
+                  const matches = html.match(new RegExp(`${basePattern}[^"']+`, 'g'));
+                  if (matches && matches.length > 0) {
+                    return Promise.all(
+                      matches.map(url => cache.add(url).catch(err => console.warn(`Failed to cache ${url}:`, err)))
+                    );
+                  }
+                  return Promise.resolve();
+                });
+            })
+        );
+      });
     })
   );
 });

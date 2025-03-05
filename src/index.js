@@ -15,16 +15,15 @@ root.render(
 );
 
 // Service Worker registration for offline capabilities
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
-    const swPath = process.env.PUBLIC_URL + '/service-worker.js';
-    navigator.serviceWorker.register(swPath).then(
-      (registration) => {
+    const swPath = `${process.env.PUBLIC_URL}/service-worker.js`;
+    navigator.serviceWorker.register(swPath)
+      .then(registration => {
         console.log('Service Worker registered with scope:', registration.scope);
-      },
-      (error) => {
+      })
+      .catch(error => {
         console.error('Service Worker registration failed:', error);
-      }
-    );
+      });
   });
 }

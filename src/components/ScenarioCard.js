@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import PropTypes from 'prop-types';
 import { useTheme } from '../context/ThemeContext';
 
 const Card = styled.div`
@@ -82,6 +83,14 @@ const ScenarioCard = ({
       </StartButton>
     </Card>
   );
+};
+
+ScenarioCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  type: PropTypes.oneOf(['food', 'work', 'social', 'travel']),
+  duration: PropTypes.string.isRequired,
+  difficulty: PropTypes.string,
+  onClick: PropTypes.func.isRequired
 };
 
 export default ScenarioCard;

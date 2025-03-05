@@ -36,7 +36,6 @@ const UserProfile = () => {
         name: 'John Doe',
         email: 'john.doe@example.com',
         languagePreference: 'English',
-        avatar: 'default-avatar.png'
     });
 
     const handleInputChange = (e) => {
@@ -45,16 +44,26 @@ const UserProfile = () => {
     };
 
     const handleAvatarChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setUserInfo({ ...userInfo, avatar: URL.createObjectURL(file) });
-        }
+        console.log('Avatar upload functionality not implemented');
     };
 
     return (
         <ProfileContainer theme={theme}>
             <h2>User Profile</h2>
-            <img src={userInfo.avatar} alt="User Avatar" width="100" />
+            <div 
+                style={{
+                    width: '100px',
+                    height: '100px',
+                    backgroundColor: '#ccc',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '1rem'
+                }}
+            >
+                {userInfo.name.charAt(0)}
+            </div>
             <form>
                 <label>
                     Name:

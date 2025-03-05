@@ -15,17 +15,25 @@ const UserItem = styled.li`
   margin-bottom: ${({ theme }) => theme.spacing[2]};
 `;
 
-const Avatar = styled.img`
+const AvatarPlaceholder = styled.div`
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
+  background-color: ${({ theme }) => theme.colors.primary.main};
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-right: ${({ theme }) => theme.spacing[2]};
+  font-size: 14px;
 `;
 
 const Leaderboard = () => {
     const { theme } = useTheme();
     const users = [
-        { name: 'Alice', score: 150, avatar: 'alice.png' },
-        { name: 'Bob', score: 120, avatar: 'bob.png' },
-        { name: 'Charlie', score: 100, avatar: 'charlie.png' },
+        { name: 'Alice', score: 150 },
+        { name: 'Bob', score: 120 },
+        { name: 'Charlie', score: 100 },
     ];
 
     // Sort users by score
@@ -37,7 +45,9 @@ const Leaderboard = () => {
             <ul>
                 {sortedUsers.map((user, index) => (
                     <UserItem key={index} theme={theme}>
-                        <Avatar src={user.avatar} alt={`${user.name}'s avatar`} width="30" theme={theme} />
+                        <AvatarPlaceholder theme={theme}>
+                            {user.name.charAt(0)}
+                        </AvatarPlaceholder>
                         {user.name}: {user.score} points
                     </UserItem>
                 ))}
